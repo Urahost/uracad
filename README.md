@@ -14,6 +14,8 @@
   <a href="https://github.com/BourezBastien/uracad/issues">Signaler un bug</a>
   ·
   <a href="https://github.com/BourezBastien/uracad/issues">Proposer une fonctionnalité</a>
+  ·
+  <a href="https://docs.uracad.com">Documentation</a>
 </div>
 
 ## 📋 Sommaire
