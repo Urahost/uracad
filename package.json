@@ -9,7 +9,7 @@
     "dev": "next dev --turbopack",
     "email": "email dev",
     "format": "prettier --write .",
-    "postinstall": "pnpm prisma generate && pnpm prisma migrate deploy",
+    "postinstall": "pnpm prisma generate && pnpm prisma migrate dev --create-only",
     "knip": "knip-bun --config knip.json",
     "lint": "eslint . --fix",
     "start": "next start",
