@@ -7,7 +7,7 @@
   <a href="https://uracad.com"><strong>Site Officiel »</strong></a>
   <br />
   <br />
-  <a href="https://discord.gg/uVq2a8f6hc">Discord</a>
+  <a href="https://discord.gg/urahost">Discord</a>
   ·
   <a href="https://uracad.userjot.com/">Feedback</a>
   ·
