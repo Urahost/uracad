@@ -14,16 +14,9 @@ const CreateVehicleSchema = z.object({
   year: z.number().optional(),
   licensePlate: z.string().min(1, "License plate is required"),
   vin: z.string().optional(),
-  color: z.string().min(1, "Color is required"),
-  type: z.string().min(1, "Type is required"),
-  category: z.string().optional(),
-  status: z.enum(["ACTIVE", "STOLEN", "IMPOUNDED", "DESTROYED"]).default("ACTIVE"),
-  registrationStatus: z.enum(["REGISTERED", "EXPIRED", "SUSPENDED"]).default("REGISTERED"),
-  insuranceStatus: z.string().optional(),
-  registrationExpiryDate: z.date().optional(),
-  lastInspectionDate: z.date().optional(),
-  modifications: z.string().optional(),
   additionalInfo: z.string().optional(),
+  color: z.string().default("UNKNOWN"),
+  type: z.string().default("CAR"),
 });
 
 export type CreateVehicleSchemaType = z.infer<typeof CreateVehicleSchema>;
@@ -33,7 +26,6 @@ export const createVehicleAction = serverAction
   .action(async ({ parsedInput: input }) => {
     const server = await getRequiredCurrentServerCache();
   
-    
     // Vérifier que le citoyen existe et appartient à cette organisation
     const citizen = await prisma.citizen.findFirst({
       where: {
@@ -53,18 +45,11 @@ export const createVehicleAction = serverAction
         year: input.year,
         licensePlate: input.licensePlate,
         vin: input.vin,
-        color: input.color,
-        type: input.type,
-        category: input.category,
-        status: input.status,
-        registrationStatus: input.registrationStatus,
-        insuranceStatus: input.insuranceStatus,
-        registrationExpiryDate: input.registrationExpiryDate,
-        lastInspectionDate: input.lastInspectionDate,
-        modifications: input.modifications,
         additionalInfo: input.additionalInfo,
         citizenId: input.citizenId,
         organizationId: server.id,
+        color: input.color,
+        type: input.type,
       },
     });
 
@@ -80,23 +65,16 @@ const UpdateVehicleSchema = z.object({
   year: z.number().optional(),
   licensePlate: z.string().min(1, "License plate is required"),
   vin: z.string().optional(),
-  color: z.string().min(1, "Color is required"),
-  type: z.string().min(1, "Type is required"),
-  category: z.string().optional(),
-  status: z.enum(["ACTIVE", "STOLEN", "IMPOUNDED", "DESTROYED"]).default("ACTIVE"),
-  registrationStatus: z.enum(["REGISTERED", "EXPIRED", "SUSPENDED"]).default("REGISTERED"),
-  insuranceStatus: z.string().optional(),
-  registrationExpiryDate: z.date().optional(),
-  lastInspectionDate: z.date().optional(),
-  modifications: z.string().optional(),
   additionalInfo: z.string().optional(),
+  color: z.string().default("UNKNOWN"),
+  type: z.string().default("CAR"),
 });
 
 export type UpdateVehicleSchemaType = z.infer<typeof UpdateVehicleSchema>;
 
 export const updateVehicleAction = serverAction
   .schema(UpdateVehicleSchema)
-  .action(async ({ parsedInput: input })     => {
+  .action(async ({ parsedInput: input }) => {
     const server = await getRequiredCurrentServerCache();
     
     const vehicle = await prisma.vehicle.findFirst({
@@ -125,16 +103,9 @@ export const updateVehicleAction = serverAction
         year: input.year,
         licensePlate: input.licensePlate,
         vin: input.vin,
+        additionalInfo: input.additionalInfo,
         color: input.color,
         type: input.type,
-        category: input.category,
-        status: input.status,
-        registrationStatus: input.registrationStatus,
-        insuranceStatus: input.insuranceStatus,
-        registrationExpiryDate: input.registrationExpiryDate,
-        lastInspectionDate: input.lastInspectionDate,
-        modifications: input.modifications,
-        additionalInfo: input.additionalInfo,
       },
     });
 
@@ -179,37 +150,39 @@ export const deleteVehicleAction = serverAction
     return { success: true };
   });
 
-// Action pour récupérer les véhicules d'un citoyen
-export async function getVehiclesByCitizenAction(data: { citizenId: string }) {
-  return serverAction
-    .schema(z.object({ citizenId: z.string() }))
-    .metadata({ customPermissions: ["VIEW_VEHICLE"] })
-    .action(async ({ parsedInput: input }) => {
-      const server = await getRequiredCurrentServerCache();
-      
-      // Récupérer les véhicules du citoyen
-      const vehicles = await prisma.vehicle.findMany({
-        where: {
-          citizenId: input.citizenId,
-          citizen: {
-            organizationId: server.id,
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          make: true,
-          model: true,
-          year: true,
-          licensePlate: true,
-          color: true,
-          type: true,
-          status: true,
-        },
-      });
+export type VehicleListItem = {
+  id: string;
+  make: string;
+  model: string;
+  year: number | null;
+  licensePlate: string;
+  vin: string | null;
+  additionalInfo: string | null;
+  citizenId: string;
+  organizationId: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-      return vehicles;
-    })(data);
+export async function getVehiclesByCitizenAction(data: { citizenId: string }): Promise<VehicleListItem[]> {
+  const vehicles = await prisma.vehicle.findMany({
+    where: {
+      citizenId: data.citizenId,
+    },
+    select: {
+      id: true,
+      make: true,
+      model: true,
+      year: true,
+      licensePlate: true,
+      vin: true,
+      additionalInfo: true,
+      citizenId: true,
+      organizationId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return vehicles;
 } 

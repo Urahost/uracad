@@ -1,14 +1,11 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-/**
- * @type {import("@t3-oss/env-nextjs").EnvConfig}
- * 
- * Please import **this** file and use the `env` variable
- */
+
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
+    URACAD_FIVEM_ENDPOINT: z.string().optional(),
     GITHUB_CLIENT_ID: z.string().optional(),
     GITHUB_CLIENT_SECRET: z.string().optional(),
     DISCORD_CLIENT_ID: z.string().optional(),

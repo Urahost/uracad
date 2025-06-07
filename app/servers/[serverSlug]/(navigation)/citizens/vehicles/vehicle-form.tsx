@@ -12,46 +12,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { z } from "zod";
 import { LoadingButton } from "@/features/form/submit-button";
 import type { CreateVehicleSchemaType } from "./vehicles.action";
 import { useTranslations } from "next-intl";
-
-const vehicleTypes = [
-  "Car",
-  "Motorcycle",
-  "Truck",
-  "SUV",
-  "Van",
-  "Bus",
-  "Boat",
-  "Plane",
-  "Other",
-];
-
-const vehicleCategories = [
-  "Sedan",
-  "Coupé",
-  "Hatchback",
-  "Station Wagon",
-  "Pickup",
-  "Convertible",
-  "Minivan",
-  "Compact",
-  "Electric",
-  "Hybrid",
-  "Sport",
-  "Luxury",
-  "Off-road",
-  "Utility",
-];
 
 const Schema = z.object({
   make: z.string().min(1, "Make is required"),
@@ -62,14 +26,9 @@ const Schema = z.object({
   ),
   licensePlate: z.string().min(1, "License plate is required"),
   vin: z.string().optional(),
-  color: z.string().min(1, "Color is required"),
-  type: z.string().min(1, "Type is required"),
-  category: z.string().optional(),
-  status: z.enum(["ACTIVE", "STOLEN", "IMPOUNDED", "DESTROYED"]).default("ACTIVE"),
-  registrationStatus: z.enum(["REGISTERED", "EXPIRED", "SUSPENDED"]).default("REGISTERED"),
-  insuranceStatus: z.string().optional(),
-  modifications: z.string().optional(),
   additionalInfo: z.string().optional(),
+  color: z.string().default("UNKNOWN"),
+  type: z.string().default("CAR"),
 });
 
 export type VehicleFormValues = z.infer<typeof Schema>;
@@ -79,8 +38,6 @@ const transformFormToServerData = (data: VehicleFormValues, citizenId: string): 
   return {
     ...data,
     citizenId,
-    registrationExpiryDate: undefined, // Ces dates seront gérées dans une version future
-    lastInspectionDate: undefined,
   };
 };
 
@@ -105,8 +62,6 @@ export function VehicleForm({
   const form = useZodForm({
     schema: Schema,
     defaultValues: {
-      status: "ACTIVE",
-      registrationStatus: "REGISTERED",
       ...defaultValues,
     },
   });
@@ -134,7 +89,6 @@ export function VehicleForm({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="model"
@@ -149,7 +103,6 @@ export function VehicleForm({
             )}
           />
         </div>
-
         <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
@@ -171,7 +124,6 @@ export function VehicleForm({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="licensePlate"
@@ -185,171 +137,20 @@ export function VehicleForm({
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
-            name="color"
+            name="vin"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("details.color")}</FormLabel>
+                <FormLabel>{t("details.vin")} ({tCommon("optional")})</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Red, Blue, etc." />
+                  <Input {...field} placeholder="Vehicle Identification Number" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("details.type")}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select vehicle type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {vehicleTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("details.category")} ({tCommon("optional")})</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select vehicle category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {vehicleCategories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("details.status")}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">{t("status.active")}</SelectItem>
-                    <SelectItem value="STOLEN">{t("status.stolen")}</SelectItem>
-                    <SelectItem value="IMPOUNDED">{t("status.impounded")}</SelectItem>
-                    <SelectItem value="DESTROYED">{t("status.destroyed")}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="registrationStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("details.registration")}</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select registration status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="REGISTERED">{t("registration.registered")}</SelectItem>
-                    <SelectItem value="EXPIRED">{t("registration.expired")}</SelectItem>
-                    <SelectItem value="SUSPENDED">{t("registration.suspended")}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="insuranceStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Insurance Status ({tCommon("optional")})</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Insured, etc." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="vin"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("details.vin")} ({tCommon("optional")})</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Vehicle Identification Number" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="modifications"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("details.modifications")} ({tCommon("optional")})</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  placeholder="Any modifications to the vehicle"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <FormField
           control={form.control}
           name="additionalInfo"

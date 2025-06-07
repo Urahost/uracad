@@ -32,14 +32,9 @@ export default function EditVehicleModal({
     year: vehicle.year ?? undefined,
     licensePlate: vehicle.licensePlate,
     vin: vehicle.vin ?? undefined,
+    additionalInfo: vehicle.additionalInfo ?? undefined,
     color: vehicle.color,
     type: vehicle.type,
-    category: vehicle.category ?? undefined,
-    status: vehicle.status as "ACTIVE" | "STOLEN" | "IMPOUNDED" | "DESTROYED",
-    registrationStatus: vehicle.registrationStatus as "REGISTERED" | "EXPIRED" | "SUSPENDED",
-    insuranceStatus: vehicle.insuranceStatus ?? undefined,
-    modifications: vehicle.modifications ?? undefined,
-    additionalInfo: vehicle.additionalInfo ?? undefined,
   };
 
   const onSubmit = async (formData: VehicleFormValues) => {

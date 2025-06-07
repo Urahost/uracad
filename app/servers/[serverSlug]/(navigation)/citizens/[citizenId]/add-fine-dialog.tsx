@@ -18,15 +18,7 @@ import { getVehiclesByCitizenAction } from "../vehicles/vehicles.action";
 import { logger } from "@/lib/logger";
 import type { FineCreateSchemaType } from "./fines/fines.schema";
 import { PlusIcon } from "lucide-react";
-
-type AddFineDialogProps = {
-  citizen: {
-    id: string;
-    name: string;
-    surname: string;
-    driversLicensePoints: number;
-  };
-};
+import type { Vehicle } from "@prisma/client";
 
 type VehicleOption = {
   id: string;
@@ -35,8 +27,15 @@ type VehicleOption = {
   licensePlate: string;
   color: string;
   year?: number | null;
-  type: string;
-  status: string;
+};
+
+type AddFineDialogProps = {
+  citizen: {
+    id: string;
+    name: string;
+    surname: string;
+    driversLicensePoints: number;
+  };
 };
 
 export default function AddFineDialog({
@@ -55,12 +54,15 @@ export default function AddFineDialog({
       const response = await getVehiclesByCitizenAction({
         citizenId: citizen.id,
       });
-      
-      if (response?.data) {
-        setVehicles(response.data);
-      } else {
-        setVehicles([]);
-      }
+      const transformedVehicles: VehicleOption[] = response.map(vehicle => ({
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        licensePlate: vehicle.licensePlate,
+        color: "UNKNOWN",
+        year: vehicle.year,
+      }));
+      setVehicles(transformedVehicles);
     } catch (error) {
       logger.error("Failed to load vehicles:", error);
       setVehicles([]);

@@ -3,14 +3,14 @@
 // `npx @better-auth/cli generate --output prisma/schema/better-auth.prisma`
 
 model User {
-  id               String   @id
-  name             String
-  email            String
-  emailVerified    Boolean
-  image            String?
-  createdAt        DateTime
-  updatedAt        DateTime
-  resendContactId  String?
+  id              String   @id
+  name            String
+  email           String
+  emailVerified   Boolean
+  image           String?
+  createdAt       DateTime
+  updatedAt       DateTime
+  resendContactId String?
 
   // Outgoing
   sessions    Session[]
@@ -77,7 +77,7 @@ model Organization {
   createdAt   DateTime
   metadata    String?
   email       String?
-  colorsTheme String?  // Nom du thème de couleurs choisi
+  colorsTheme String? // Nom du thème de couleurs choisi
 
   // Relations
 

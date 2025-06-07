@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ServerDetailsFormSchema, type ServerDetailsFormSchemaType } from "../server.schema";
 import { ThemeSelector } from "@/components/theme-selector";
+import { ImportServerData } from "./import-server-data";
 
 type ProductFormProps = {
   defaultValues: ServerDetailsFormSchemaType;
@@ -129,6 +130,7 @@ export const ServerDetailsForm = ({ defaultValues, organizationId, currentTheme 
           <ThemeSelector organizationId={organizationId} currentTheme={currentTheme} />
         </CardContent>
       </Card>
+      <ImportServerData organizationId={organizationId} />
       <div className="flex justify-end p-6">
         <Button type="submit" className="w-fit">
           Save

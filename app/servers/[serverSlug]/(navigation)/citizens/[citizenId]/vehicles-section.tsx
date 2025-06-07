@@ -11,18 +11,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { VehicleStatus } from "@/features/vehicles/vehicle-status";
-import type { Citizen, Vehicle } from "@prisma/client";
+import type { Citizen } from "@prisma/client";
 import { PencilIcon, PlusIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";
 import CheckPermission from "../../permissions/check-permissions";
 import { useTranslations } from "next-intl";
+import type { VehicleListItem } from "../vehicles/vehicles.action";
 
 export default function VehiclesSection({
   vehicles,
   citizen,
   serverSlug,
 }: {
-  vehicles: Vehicle[];
+  vehicles: VehicleListItem[];
   citizen: Citizen;
   serverSlug: string;
 }) {
@@ -90,15 +91,15 @@ export default function VehiclesSection({
                   <TableCell className="font-medium">
                     {vehicle.make} {vehicle.model} ({vehicle.year ?? "N/A"})
                     <div className="text-xs text-muted-foreground">
-                      {vehicle.type} • {vehicle.color}
+                      {vehicle.licensePlate}
                     </div>
                   </TableCell>
                   <TableCell>{vehicle.licensePlate}</TableCell>
                   <TableCell>
-                    <VehicleStatus status={vehicle.status} />
+                    {/* Status removed */}
                   </TableCell>
                   <TableCell>
-                    {renderRegistrationStatus(vehicle.registrationStatus)}
+                    {/* Registration status removed */}
                   </TableCell>
                   <CheckPermission 
                     permissions={["EDIT_VEHICLE", "DELETE_VEHICLE"]} 

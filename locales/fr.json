@@ -61,15 +61,9 @@
         "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce véhicule ?",
         "details": {
             "makeModel": "Marque & Modèle",
-            "licensePlate": "immatriculation",
-            "status": "Statut",
-            "registration": "Immatriculation",
-            "vin": "Numéro d'identification (VIN)",
-            "color": "Couleur",
             "year": "Année",
-            "type": "Type",
-            "category": "Catégorie",
-            "modifications": "Modifications",
+            "licensePlate": "Immatriculation",
+            "vin": "Numéro d'identification (VIN)",
             "additionalInfo": "Informations supplémentaires"
         },
         "status": {
