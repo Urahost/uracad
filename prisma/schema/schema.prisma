@@ -1,0 +1,450 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model Feedback {
+  id      String  @id @default(nanoid(11))
+  review  Int
+  message String
+  email   String?
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Department {
+  id             String       @id @default(cuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  roles          CustomRole[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+}
+
+model CustomRole {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  permissions    String // Stocke les permissions au format JSON
+  color          String? // Couleur du rôle (format hex)
+  position       Int // Position hiérarchique (comme Discord)
+  organizationId String
+  members        Member[] // Relation avec les membres qui utilisent ce rôle
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  @@unique([name, organizationId])
+  @@index([departmentId])
+  @@map("custom_role")
+}
+
+// Active Officers Model for tracking active/on-duty law enforcement
+model ActiveOfficer {
+  id             String       @id @default(cuid())
+  officerNumber  String // Badge or officer number (e.g., "34", "SAPR-12")
+  officerName    String // Name display (e.g., "34 - D Alexander Main")
+  department     String // Department (e.g., "SAPR", "LSPD")
+  status         String // Current status (e.g., "On-Duty", "Meal break")
+  callsign       String? // Radio callsign if any
+  radioChannel   String? // Which radio channel they're on
+  incident       String? // Current incident ID if responding
+  notes          String? // Additional notes
+  isTemporary    Boolean      @default(false) // If it's a temporary unit
+  createdById    String? // Who created this entry
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([department])
+  @@index([status])
+}
+
+model Citizen {
+  id                   String   @id @default(cuid())
+  image                String?
+  name                 String
+  surname              String
+  dateOfBirth          DateTime
+  socialSecurityNumber String?
+  gender               String
+  ethnicity            String?
+  hairColor            String?
+  eyeColor             String?
+  weight               Float?
+  height               Float?
+  address              String
+  postal               String?
+  phone                String?
+  occupation           String?
+  additionalInfo       String?
+
+  driversLicense           String?
+  driversLicenseCategories String?
+
+  driversLicensePoints Int @default(12) // Points de permis (12 points par défaut)
+
+  pilotLicense String?
+
+  pilotLicenseCategories String?
+
+  waterLicense           String?
+  waterLicenseCategories String?
+
+  firearmsLicense           String?
+  firearmsLicenseCategories String?
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  medicalRecords MedicalRecord[]
+
+  vehicles      Vehicle[]
+  fines         Fine[] // Relation avec les amendes reçues
+  judicialCases JudicialCase[] // Relation avec les casiers judiciaires
+  warrants      Warrant[] // Relation avec les mandats
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+}
+
+model MedicalRecord {
+  id             String       @id @default(cuid())
+  citizenId      String
+  citizen        Citizen      @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Type de dossier médical
+  type String // CARE, INJURY, TRAUMA, PSYCHOLOGY, DEATH
+
+  // Informations générales
+  title       String
+  description String
+  location    String? // Lieu des soins/incident
+
+  // Détails médicaux
+  diagnosis    String?
+  treatment    String?
+  prescription String?
+
+  // Détails spécifiques selon le type
+  injuryDetails   String? // Détails des blessures
+  traumaDetails   String? // Détails des traumatismes
+  psychologyNotes String? // Notes psychologiques
+  deathCause      String? // Cause du décès
+  autopsyReport   String? // Rapport d'autopsie
+
+  // Restrictions et confidentialité
+  isConfidential   Boolean @default(false) // Données sensibles
+  isPoliceVisible  Boolean @default(false) // Visibilité police
+  restrictedAccess Boolean @default(false) // Accès restreint
+
+  // Métadonnées
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([citizenId])
+  @@index([organizationId])
+}
+
+model Vehicle {
+  id             String       @id @default(cuid())
+  citizenId      String
+  citizen        Citizen      @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Informations du véhicule
+  make         String // Marque (ex: Toyota, BMW)
+  model        String // Modèle (ex: Corolla, X5)
+  year         Int? // Année de fabrication
+  licensePlate String // Plaque d'immatriculation
+  vin          String? // Numéro d'identification du véhicule
+
+  // Caractéristiques
+  color    String // Couleur
+  type     String // Type de véhicule (voiture, moto, camion, etc.)
+  category String? // Catégorie (berline, SUV, etc.)
+
+  // État et statut
+  status             String  @default("ACTIVE") // ACTIVE, STOLEN, IMPOUNDED, DESTROYED
+  registrationStatus String  @default("REGISTERED") // REGISTERED, EXPIRED, SUSPENDED
+  insuranceStatus    String? // INSURED, UNINSURED
+
+  // Dates importantes
+  registrationExpiryDate DateTime?
+  lastInspectionDate     DateTime?
+
+  // Informations supplémentaires
+  modifications  String? // Modifications apportées au véhicule
+  additionalInfo String? // Informations supplémentaires
+
+  // Relations
+  fines Fine[] // Amendes liées à ce véhicule
+
+  // Métadonnées
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([citizenId])
+  @@index([organizationId])
+  @@index([licensePlate])
+}
+
+// Modèle pour les infractions prédéfinies du code pénal
+model PenalCode {
+  id            String  @id @default(cuid())
+  code          String // Code de l'infraction (ex: A-101)
+  category      String // Catégorie (Trafic, Crime, Délit, etc.)
+  description   String // Description de l'infraction
+  minFine       Float // Montant minimum de l'amende
+  maxFine       Float // Montant maximum de l'amende
+  licensePoints Int? // Points retirés du permis (facultatif)
+  jailTime      Int? // Temps de prison en minutes (facultatif)
+  notes         String? // Notes supplémentaires
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  fines Fine[] // Amendes associées à cette infraction
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([code])
+  @@index([category])
+}
+
+// Modèle pour les amendes appliquées
+model Fine {
+  id          String     @id @default(cuid())
+  citizenId   String
+  citizen     Citizen    @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  penalCodeId String?
+  penalCode   PenalCode? @relation(fields: [penalCodeId], references: [id], onDelete: SetNull)
+
+  // Véhicule impliqué dans l'infraction (pour les infractions de trafic)
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  // Détails de l'amende
+  amount        Float // Montant de l'amende
+  reason        String // Raison/description
+  location      String? // Lieu de l'infraction
+  licensePoints Int? // Points retirés du permis
+  jailTime      Int? // Temps de prison en minutes
+
+  // Statut
+  status String    @default("PENDING") // PENDING, PAID, CONTESTED
+  paidAt DateTime? // Date de paiement
+
+  // Qui a émis l'amende
+  issuedById   String?
+  issuedByName String // Nom de l'agent qui a émis l'amende
+  issuedByDept String // Département (LSPD, Sheriff, FBI)
+
+  notes String? // Notes supplémentaires
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([citizenId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([issuedByDept])
+  @@index([vehicleId])
+}
+
+model JudicialCase {
+  id         String  @id @default(cuid())
+  caseNumber String // Numéro de dossier
+  citizenId  String
+  citizen    Citizen @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+
+  // Informations générales
+  title       String
+  description String
+  category    String // CRIMINAL, CIVIL, TRAFFIC, ADMINISTRATIVE
+  status      String // OPEN, CLOSED, PENDING, VERDICT
+
+  // Détails judiciaires
+  charges         String? // Charges/accusations (peut être un JSON avec liste des infractions)
+  verdict         String? // Décision du tribunal
+  sentenceDetails String? // Détails de la peine
+  judgeName       String? // Nom du juge
+
+  // Dates importantes
+  filingDate  DateTime  @default(now()) // Date de dépôt
+  hearingDate DateTime? // Date d'audience
+  closedDate  DateTime? // Date de clôture
+
+  // Documents et restrictions
+  documents   String? // Liste des documents liés (format JSON)
+  isSealed    Boolean @default(false) // Dossier scellé
+  isSensitive Boolean @default(false) // Dossier sensible
+
+  // Métadonnées
+  createdById   String? // ID de l'utilisateur qui a créé le dossier
+  createdByName String // Nom de la personne qui a créé le dossier
+  createdByDept String // Département/service
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  warrants Warrant[] // Mandats liés à ce dossier
+
+  @@index([citizenId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdByDept])
+}
+
+model Warrant {
+  id            String @id @default(cuid())
+  warrantNumber String // Numéro du mandat
+
+  // Associations
+  judicialCaseId String?
+  judicialCase   JudicialCase? @relation(fields: [judicialCaseId], references: [id], onDelete: SetNull)
+  citizenId      String
+  citizen        Citizen       @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+
+  // Détails du mandat
+  type        String // ARREST, SEARCH, SURVEILLANCE
+  status      String // PENDING, APPROVED, EXECUTED, EXPIRED, CANCELED
+  description String // Description/motifs
+  location    String? // Lieu d'exécution prévu
+
+  // Approbation et exécution
+  issuedById     String? // ID de l'agent qui a émis le mandat
+  issuedByName   String // Nom de l'agent qui a émis le mandat
+  issuedByDept   String // Département (LSPD, Sheriff, FBI)
+  approvedById   String? // ID du juge/procureur qui a approuvé
+  approvedByName String? // Nom du juge/procureur qui a approuvé
+  executedById   String? // ID de l'agent qui a exécuté le mandat
+  executedByName String? // Nom de l'agent qui a exécuté le mandat
+
+  // Dates
+  issuedDate     DateTime  @default(now()) // Date d'émission
+  approvedDate   DateTime? // Date d'approbation
+  expirationDate DateTime? // Date d'expiration
+  executedDate   DateTime? // Date d'exécution
+
+  // Restrictions
+  isUrgent Boolean @default(false) // Urgence (exécution immédiate)
+  isSealed Boolean @default(false) // Mandat scellé/confidentiel
+
+  // Métadonnées et notes
+  notes          String? // Notes supplémentaires
+  executionNotes String? // Notes d'exécution
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([citizenId])
+  @@index([organizationId])
+  @@index([judicialCaseId])
+}
+
+model InviteLink {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  role          String // member, admin, etc.
+  maxUses       Int? // null means unlimited
+  uses          Int       @default(0)
+  expiresAt     DateTime? // null means never expires
+  isActive      Boolean   @default(true)
+  createdById   String? // Who created this invite link
+  createdByName String? // Name of the creator
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([code])
+  @@index([isActive])
+}
+
+model Form {
+  id             String    @id @default(cuid())
+  title          String
+  description    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  questions      Question[]
+  responses      FormResponse[]
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  webhookUrl     String? // Ajout du webhook Discord
+  webhookMentions String? // IDs de rôles et users à mentionner (JSON)
+}
+
+model Question {
+  id        String   @id @default(cuid())
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId    String
+  label     String
+  type      String   // "text", "textarea", "select", "checkbox", "radio", etc.
+  options   String?  // JSON string for select/radio/checkbox options
+  required  Boolean  @default(false)
+  order     Int
+  answers   Answer[]
+}
+
+model FormResponse {
+  id        String   @id @default(cuid())
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId    String
+  userId    String?  // Optionnel si anonyme
+  createdAt DateTime @default(now())
+  answers   Answer[]
+}
+
+model Answer {
+  id             String   @id @default(cuid())
+  formResponse   FormResponse @relation(fields: [formResponseId], references: [id], onDelete: Cascade)
+  formResponseId String
+  question       Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId     String
+  value          String    // JSON string (pour gérer tous les types de réponses)
+}

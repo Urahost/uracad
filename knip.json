@@ -1,0 +1,16 @@
+{
+  "ignore": [
+    "src/components/ui/*",
+    "*.config.js",
+    "playwright.config.ts",
+    "src/lib/server-url.ts",
+    "src/site-config.ts",
+    "e2e/**"
+  ],
+  "excludeEntryPatterns": ["playwright.config.ts"],
+  "paths": {
+    "@/*": ["./src/*"],
+    "@email/*": ["./emails/*"]
+  },
+  "entry": ["unauthorized.tsx", "sitemap.tsx"]
+}

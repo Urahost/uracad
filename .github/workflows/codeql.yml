@@ -1,0 +1,52 @@
+name: "CodeQL"
+
+on:
+  pull_request:
+    branches: [ dev, main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Exécution hebdomadaire (dimanche à minuit)
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'typescript' ]  # Spécifique pour Next.js et TypeScript
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-and-quality  # Ajoute des vérifications de qualité en plus de la sécurité
+        paths: |
+          src
+          app
+          components
+          pages
+          lib
+          utils
+          hooks
+        paths-ignore: |
+          node_modules
+          **/*.test.ts
+          **/*.test.tsx
+          **/*.spec.ts
+          **/*.spec.tsx
+          **/*.d.ts
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
