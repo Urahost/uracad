@@ -1,5 +1,3 @@
-import { SiteConfig } from "@/site-config";
-
 /**
  * This method return the server URL based on the environment.
  */
@@ -14,7 +12,7 @@ export const getServerUrl = () => {
 
   // If we are in production, we return the production URL.
   if (process.env.VERCEL_ENV === "production") {
-    return SiteConfig.prodUrl;
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
 
   // If we are in "stage" environment, we return the staging URL.
