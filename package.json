@@ -16,7 +16,7 @@
     "start": "next start",
     "stripe-webhooks": "stripe listen --forward-to localhost:3000/api/auth/stripe/webhook",
     "ts": "tsc --noEmit",
-    "vercel-build": "prisma generate && next build && prisma migrate deploy",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "test": "vitest",
     "test:e2e": "HEADLESS=0 playwright test --ui",
     "test:ci": "vitest run",
