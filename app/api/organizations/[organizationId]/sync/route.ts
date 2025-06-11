@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { syncCitizens } from '@/lib/actions/sync';
 import { logger } from '@/lib/logger';
+import type { SyncConfig } from '@/types/api';
 
 export async function POST(
   request: Request,
@@ -39,6 +40,7 @@ export async function POST(
         id: true,
         apiUrl: true,
         syncInterval: true,
+        metadata: true,
       },
     });
 
@@ -46,12 +48,29 @@ export async function POST(
       return new NextResponse('API URL not configured', { status: 400 });
     }
 
-    // Exécuter la synchronisation
-    await syncCitizens({
-      apiUrl: organization.apiUrl,
+    const metadata = organization.metadata ? JSON.parse(organization.metadata) : {};
+    const syncSystem = metadata.syncSystem ?? 'esx';
+
+    if (!['esx', 'qbcore'].includes(syncSystem)) {
+      return new NextResponse('Invalid sync system configured', { status: 400 });
+    }
+
+    // Préparer la configuration de synchronisation
+    const syncConfig: SyncConfig = {
+      system: syncSystem,
       organizationId,
       syncInterval: organization.syncInterval ?? 300000,
-    });
+      [syncSystem]: {
+        baseUrl: organization.apiUrl,
+      },
+    };
+
+    // Exécuter la synchronisation
+    const result = await syncCitizens(syncConfig);
+
+    if (result.status === 'error') {
+      return new NextResponse(result.error ?? 'Sync failed', { status: 500 });
+    }
 
     // Mettre à jour la date de dernière synchronisation
     await prisma.organization.update({
@@ -59,9 +78,16 @@ export async function POST(
       data: { lastSyncAt: new Date() },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      stats: result.stats,
+      lastSyncAt: result.lastSyncAt,
+    });
   } catch (error) {
     logger.error('Sync error:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse(
+      error instanceof Error ? error.message : 'Internal Server Error', 
+      { status: 500 }
+    );
   }
 } 

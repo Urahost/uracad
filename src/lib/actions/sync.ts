@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { ApiCitizen, ApiVehicle, SyncConfig } from '@/types/api';
+import type { ApiVehicle, SyncConfig, ESXCitizen, QBCoreCitizen, ESXAccount, InventoryItem } from '@/types/api';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import type { Prisma as PrismaTypes } from '@prisma/client';
@@ -292,11 +292,151 @@ type SyncStatusResult = {
   };
 };
 
+async function fetchESXCitizens(config: SyncConfig['esx']): Promise<ESXCitizen[]> {
+  if (!config?.baseUrl) throw new Error('ESX base URL not configured');
+  
+  const response = await fetch(`${config.baseUrl}/esx/citizens`);
+  if (!response.ok) throw new Error('Failed to fetch ESX citizens');
+  return response.json();
+}
+
+async function fetchQBCoreCitizens(config: SyncConfig['qbcore']): Promise<QBCoreCitizen[]> {
+  if (!config?.baseUrl) throw new Error('QBCore base URL not configured');
+  
+  const response = await fetch(`${config.baseUrl}/qbcore/citizens`);
+  if (!response.ok) throw new Error('Failed to fetch QBCore citizens');
+  return response.json();
+}
+
+type ESXStatus = {
+  name: string;
+  percent: number;
+  val: number;
+};
+
+function mapESXCitizenToDatabase(esxCitizen: ESXCitizen, organizationId: string): Prisma.CitizenUncheckedCreateInput {
+  const accounts = JSON.parse(esxCitizen.accounts) as ESXAccount;
+  const metadata = JSON.parse(esxCitizen.metadata) as Record<string, unknown>;
+  const position = JSON.parse(esxCitizen.position) as { x: number; y: number; z: number };
+  const status = JSON.parse(esxCitizen.status) as ESXStatus[];
+  
+  const hunger = status.find((s) => s.name === 'hunger')?.percent ?? 0;
+  const thirst = status.find((s) => s.name === 'thirst')?.percent ?? 0;
+  
+  const fingerprint = typeof metadata.fingerprint === 'string' ? metadata.fingerprint : null;
+  const bloodType = typeof metadata.bloodtype === 'string' ? metadata.bloodtype : null;
+  
+  return {
+    citizenId: esxCitizen.identifier,
+    organizationId,
+    name: `${esxCitizen.firstname} ${esxCitizen.lastname}`,
+    firstName: esxCitizen.firstname,
+    lastName: esxCitizen.lastname,
+    dateOfBirth: new Date(esxCitizen.dateofbirth),
+    gender: esxCitizen.sex,
+    phone: esxCitizen.phone_number ?? '',
+    nationality: 'Unknown', // ESX doesn't have this
+    money: JSON.stringify({
+      cash: accounts.money,
+      bank: accounts.bank,
+      crypto: accounts.black_money, // Using black_money as crypto for ESX
+    }),
+    charinfo: JSON.stringify({
+      firstname: esxCitizen.firstname,
+      lastname: esxCitizen.lastname,
+      birthdate: esxCitizen.dateofbirth,
+      gender: esxCitizen.sex,
+      nationality: 'Unknown',
+      phone: esxCitizen.phone_number ?? '',
+    }),
+    job: JSON.stringify({
+      name: esxCitizen.job,
+      grade: esxCitizen.job_grade,
+    }),
+    gang: Prisma.JsonNull,
+    position: JSON.stringify(position),
+    metadata: JSON.stringify({
+      ...metadata,
+      hunger,
+      thirst,
+      health: metadata.health ?? 100,
+      armor: metadata.armor ?? 0,
+      stress: metadata.stress ?? 0,
+    }),
+    inventory: JSON.stringify(JSON.parse(esxCitizen.inventory) as InventoryItem[]),
+    fingerprint,
+    bloodType,
+    isDead: esxCitizen.is_dead,
+    isHandcuffed: false, // ESX doesn't have this
+    inJail: 0, // ESX doesn't have this
+    lastUpdated: new Date(),
+    lastSyncedAt: new Date(),
+  };
+}
+
+function mapQBCoreCitizenToDatabase(qbCitizen: QBCoreCitizen, organizationId: string): Prisma.CitizenUncheckedCreateInput {
+  const metadata = qbCitizen.metadata as {
+    health: number;
+    armor: number;
+    hunger: number;
+    thirst: number;
+    stress: number;
+    fingerprint?: string;
+    bloodtype?: string;
+  };
+
+  return {
+    citizenId: qbCitizen.citizenid,
+    organizationId,
+    name: `${qbCitizen.charinfo.firstname} ${qbCitizen.charinfo.lastname}`,
+    firstName: qbCitizen.charinfo.firstname,
+    lastName: qbCitizen.charinfo.lastname,
+    dateOfBirth: new Date(qbCitizen.charinfo.birthdate),
+    gender: qbCitizen.charinfo.gender,
+    phone: qbCitizen.charinfo.phone,
+    nationality: qbCitizen.charinfo.nationality,
+    money: JSON.stringify({
+      cash: qbCitizen.money.cash,
+      bank: qbCitizen.money.bank,
+      crypto: qbCitizen.money.crypto,
+    }),
+    charinfo: JSON.stringify(qbCitizen.charinfo),
+    job: JSON.stringify(qbCitizen.job),
+    gang: JSON.stringify(qbCitizen.gang),
+    position: JSON.stringify(qbCitizen.position),
+    metadata: JSON.stringify({
+      health: metadata.health,
+      armor: metadata.armor,
+      hunger: metadata.hunger,
+      thirst: metadata.thirst,
+      stress: metadata.stress,
+    }),
+    inventory: JSON.stringify(qbCitizen.inventory),
+    fingerprint: metadata.fingerprint ?? null,
+    bloodType: metadata.bloodtype ?? null,
+    isDead: qbCitizen.isDead,
+    isHandcuffed: qbCitizen.isHandcuffed,
+    inJail: qbCitizen.inJail,
+    lastUpdated: new Date(),
+    lastSyncedAt: new Date(),
+  };
+}
+
 export async function syncCitizens(config: SyncConfig): Promise<SyncStatusResult> {
   try {
-    const citizens = await fetchApiData<ApiCitizen[]>(`${config.apiUrl}/players`);
-    const batches = Array.from({ length: Math.ceil(citizens.length / SYNC_BATCH_SIZE) }, (_, i) =>
-      citizens.slice(i * SYNC_BATCH_SIZE, (i + 1) * SYNC_BATCH_SIZE)
+    let citizens;
+    let mappedCitizens: Prisma.CitizenUncheckedCreateInput[];
+
+    if (config.system === 'esx') {
+      citizens = await fetchESXCitizens(config.esx);
+      mappedCitizens = citizens.map(c => mapESXCitizenToDatabase(c, config.organizationId));
+    } else {
+      citizens = await fetchQBCoreCitizens(config.qbcore);
+      mappedCitizens = citizens.map(c => mapQBCoreCitizenToDatabase(c, config.organizationId));
+    }
+
+    const batches = Array.from({ length: Math.ceil(mappedCitizens.length / SYNC_BATCH_SIZE) }, (_, i) =>
+      mappedCitizens.slice(i * SYNC_BATCH_SIZE, (i + 1) * SYNC_BATCH_SIZE)
     );
 
     const citizenResults = {
@@ -307,7 +447,34 @@ export async function syncCitizens(config: SyncConfig): Promise<SyncStatusResult
 
     // Process citizens in batches
     const citizenBatchResults = await Promise.all(
-      batches.map(async (batch) => processCitizenBatch(batch, config.organizationId))
+      batches.map(async (batch) => {
+        const results = {
+          created: 0,
+          updated: 0,
+          errors: 0
+        };
+
+        await Promise.all(batch.map(async (citizen) => {
+          try {
+            await prisma.citizen.upsert({
+              where: { 
+                citizenId: citizen.citizenId
+              },
+              create: citizen,
+              update: {
+                ...citizen,
+                organizationId: undefined // Remove organizationId from update to prevent relation errors
+              },
+            });
+            results.updated++;
+          } catch (error) {
+            console.error(`Error processing citizen ${citizen.citizenId}:`, error);
+            results.errors++;
+          }
+        }));
+
+        return results;
+      })
     );
 
     // Aggregate citizen results
@@ -326,13 +493,13 @@ export async function syncCitizens(config: SyncConfig): Promise<SyncStatusResult
     // Process vehicles for each citizen
     const vehiclePromises = citizens.map(async (citizen) => {
       try {
-        // Utiliser l'endpoint correct pour les véhicules
+        const citizenId = 'citizenid' in citizen ? citizen.citizenid : citizen.identifier;
         const vehicles = await fetchApiData<ApiVehicle[]>(
-          `${config.apiUrl}/vehicles/${citizen.citizenid}`
+          `${config.system === 'esx' ? config.esx?.baseUrl : config.qbcore?.baseUrl}/vehicles/${citizenId}`
         );
         
         if (vehicles.length === 0) {
-          logger.info(`No vehicles found for citizen ${citizen.citizenid}`);
+          logger.info(`No vehicles found for citizen ${citizenId}`);
           return;
         }
 
@@ -344,10 +511,10 @@ export async function syncCitizens(config: SyncConfig): Promise<SyncStatusResult
           batches.map(async (batch) => 
             processVehicleBatch(
               batch, 
-              citizen.citizenid, 
+              citizenId, 
               config.organizationId,
               (current, total) => {
-                logger.info(`Processing vehicles batch for ${citizen.citizenid}: ${current}/${total}`);
+                logger.info(`Processing vehicles batch for ${citizenId}: ${current}/${total}`);
               }
             )
           )
@@ -360,7 +527,8 @@ export async function syncCitizens(config: SyncConfig): Promise<SyncStatusResult
           vehicleResults.errors += results.errors;
         });
       } catch (error) {
-        logger.error(`Error syncing vehicles for citizen ${citizen.citizenid}:`, error);
+        const citizenId = 'citizenid' in citizen ? citizen.citizenid : citizen.identifier;
+        logger.error(`Error syncing vehicles for citizen ${citizenId}:`, error);
         vehicleResults.errors++;
       }
     });

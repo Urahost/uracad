@@ -18,39 +18,59 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { logger } from '@/lib/logger';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SyncSystem } from "@/types/api";
 
 const syncConfigSchema = z.object({
-  apiUrl: z.string().url('Please enter a valid URL'),
-  syncInterval: z.number().min(60000, 'Minimum interval is 1 minute').optional(),
+  system: z.enum(['esx', 'qbcore'] as const),
+  syncInterval: z.number().min(60000),
+  apiUrl: z.string().url(),
 });
 
 type SyncConfigFormValues = z.infer<typeof syncConfigSchema>;
 
 type SyncConfigFormProps = {
   organizationId: string;
-  defaultValues?: Partial<SyncConfigFormValues>;
-}
+  defaultValues?: {
+    apiUrl?: string;
+    syncInterval?: number;
+    lastSyncAt?: string | Date;
+    metadata?: string;
+  };
+};
 
 export function SyncConfigForm({ organizationId, defaultValues }: SyncConfigFormProps) {
   const router = useRouter();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(
+    defaultValues?.lastSyncAt ? new Date(defaultValues.lastSyncAt) : null
+  );
 
   const form = useForm<SyncConfigFormValues>({
     resolver: zodResolver(syncConfigSchema),
     defaultValues: {
+      system: defaultValues?.metadata ? JSON.parse(defaultValues.metadata).syncSystem ?? 'esx' : 'esx',
+      syncInterval: defaultValues?.syncInterval ?? 60000,
       apiUrl: defaultValues?.apiUrl ?? '',
-      syncInterval: defaultValues?.syncInterval ?? 300000, // 5 minutes par défaut
     },
   });
+
+  const system = form.watch('system');
 
   // Réinitialiser le formulaire quand les defaultValues changent
   useEffect(() => {
     if (defaultValues) {
       form.reset({
+        system: defaultValues.metadata ? JSON.parse(defaultValues.metadata).syncSystem ?? 'esx' : 'esx',
+        syncInterval: defaultValues.syncInterval ?? 60000,
         apiUrl: defaultValues.apiUrl ?? '',
-        syncInterval: defaultValues.syncInterval ?? 300000,
       });
     }
   }, [defaultValues, form]);
@@ -60,24 +80,36 @@ export function SyncConfigForm({ organizationId, defaultValues }: SyncConfigForm
       setIsSaving(true);
       const toastId = toast.loading('Saving configuration...');
 
+      logger.info('Saving sync config:', { values, organizationId });
+
       const response = await fetch(`/api/organizations/${organizationId}/sync-config`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: JSON.stringify(values),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to save configuration');
+        logger.error('Failed to save configuration:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          data 
+        });
+        throw new Error(data.message ?? 'Failed to save configuration');
       }
 
-      const data = await response.json();
+      logger.info('Configuration saved successfully:', data);
       toast.success('Configuration saved successfully', { id: toastId });
       
-      // Forcer le rechargement des données
       router.refresh();
     } catch (error) {
-      toast.error('Failed to save configuration');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save configuration';
       logger.error('Error saving configuration:', error);
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -88,22 +120,35 @@ export function SyncConfigForm({ organizationId, defaultValues }: SyncConfigForm
       setIsSyncing(true);
       const toastId = toast.loading('Starting synchronization...');
 
+      logger.info('Starting sync for organization:', organizationId);
+
       const response = await fetch(`/api/organizations/${organizationId}/sync`, {
         method: 'POST',
+        headers: { 
+          'Accept': 'application/json',
+        },
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Sync failed');
+        logger.error('Sync failed:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          data 
+        });
+        throw new Error(data.message ?? 'Sync failed');
       }
 
+      logger.info('Sync completed successfully:', data);
       setLastSyncAt(new Date());
       toast.success('Synchronization completed successfully', { id: toastId });
       
-      // Forcer le rechargement des données
       router.refresh();
     } catch (error) {
-      toast.error('Synchronization failed');
+      const errorMessage = error instanceof Error ? error.message : 'Synchronization failed';
       logger.error('Sync error:', error);
+      toast.error(errorMessage);
     } finally {
       setIsSyncing(false);
     }
@@ -123,19 +168,44 @@ export function SyncConfigForm({ organizationId, defaultValues }: SyncConfigForm
         <div className="space-y-6">
           <FormField
             control={form.control}
+            name="system"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sync System</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a sync system" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="esx">ESX</SelectItem>
+                    <SelectItem value="qbcore">QBCore</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Choose the system you want to sync with
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="apiUrl"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>API URL</FormLabel>
+                <FormLabel>API Base URL</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="https://your-api.com"
+                    placeholder={`https://your-${system}-server.com`}
                     {...field}
                     disabled={isSubmitting}
                   />
                 </FormControl>
                 <FormDescription>
-                  The base URL of your server's API endpoint.
+                  The base URL of your {system.toUpperCase()} server API
                 </FormDescription>
                 <FormMessage />
               </FormItem>
