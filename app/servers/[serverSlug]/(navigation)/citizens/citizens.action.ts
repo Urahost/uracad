@@ -67,6 +67,14 @@ export async function createCitizen(data: z.infer<typeof CitizenSchema>) {
         data: {
           ...input,
           organizationId: server.id,
+          citizenId: input.id ?? crypto.randomUUID(),
+          money: input.money ?? {},
+          charinfo: input.charinfo ?? {},
+          job: input.job ?? {},
+          gang: input.gang ?? {},
+          position: input.position ?? {},
+          metadata: input.metadata ?? {},
+          inventory: input.inventory ?? {},
         },
       });
 

@@ -1,4 +1,4 @@
-import { logger } from "./logger";
+import { logger } from "@/lib/logger";
 
 export type DiscordEmbed = {
   title?: string;
@@ -45,7 +45,7 @@ export async function sendDiscordWebhook(url: string, payload: DiscordWebhookPay
     }
     return await res.json().catch(() => undefined); // Discord peut ne rien renvoyer
   } catch (error) {
-    logger.error("Error sending Discord webhook:", error);
+    logger.error("Erreur lors de l'envoi du webhook Discord:", error);
     throw error;
   }
 } 

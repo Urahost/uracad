@@ -18,7 +18,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import type { Citizen } from "@prisma/client";
+import type { Citizen, Prisma } from '@prisma/client';
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
@@ -40,8 +40,26 @@ type PaginationInfo = {
   totalPages: number;
 };
 
+type CitizenWithLicenses = Citizen & {
+  licenses?: {
+    driver?: string;
+    pilot?: string;
+    firearm?: string;
+  };
+};
+
+function parseLicenses(metadata: Prisma.JsonValue): CitizenWithLicenses['licenses'] {
+  if (!metadata || typeof metadata !== 'object') return undefined;
+  const meta = metadata as { licences?: { driver?: boolean; weapon?: boolean; business?: boolean } };
+  return {
+    driver: meta.licences?.driver ? 'Class C' : undefined,
+    pilot: meta.licences?.business ? 'Commercial' : undefined,
+    firearm: meta.licences?.weapon ? 'Class A' : undefined
+  };
+}
+
 type CitizensTableProps = {
-  citizens: Citizen[];
+  citizens: CitizenWithLicenses[];
   serverSlug: string;
   pagination: PaginationInfo;
 };
@@ -83,10 +101,10 @@ export function CitizensTable({ citizens, serverSlug, pagination }: CitizensTabl
     },
   });
 
-  const handleDelete = (id: string, name: string, surname: string) => {
+  const handleDelete = (id: string, name: string, lastName: string) => {
     dialogManager.add({
       title: "Delete Citizen",
-      description: `Are you sure you want to delete ${name} ${surname}? This action cannot be undone.`,
+      description: `Are you sure you want to delete ${name} ${lastName}? This action cannot be undone.`,
       confirmText: "DELETE",
       action: {
         label: "Delete",
@@ -158,78 +176,81 @@ export function CitizensTable({ citizens, serverSlug, pagination }: CitizensTabl
             </TableRow>
           </TableHeader>
           <TableBody>
-            {citizens.map((citizen) => (
-              <TableRow key={citizen.id}>
-                <TableCell>
-                  {citizen.image ? (
-                    <div className="size-10 rounded-full overflow-hidden">
-                      <img 
-                        src={citizen.image} 
-                        alt={`${citizen.name} ${citizen.surname}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="size-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
-                      {citizen.name.charAt(0)}{citizen.surname.charAt(0)}
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className="font-medium">
-                  <Link className={buttonVariants({ variant: "link" })} href={`/servers/${serverSlug}/citizens/${citizen.id}`}>
-                    {citizen.name} {citizen.surname}
-                  </Link>
-                </TableCell>
-                <TableCell>{format(new Date(citizen.dateOfBirth), "dd/MM/yyyy")}</TableCell>
-                <TableCell>
-                  {citizen.driversLicense ? (
-                    <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs">
-                      {citizen.driversLicense}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">None</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {citizen.pilotLicense ? (
-                    <span className="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded text-xs">
-                      {citizen.pilotLicense}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">None</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {citizen.firearmsLicense ? (
-                    <span className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-1 rounded text-xs">
-                      {citizen.firearmsLicense}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">None</span>
-                  )}
-                </TableCell>
-                <TableCell>{citizen.phone ?? "-"}</TableCell>
-                <ActionsCheck>
-                  <TableCell className="w-24">
-                    <div className="flex space-x-2">
-                      <CheckPermission permissions={["EDIT_CITIZEN"]}>
-                        <EditCitizenModal citizen={citizen} />
-                      </CheckPermission>
-                      <CheckPermission permissions={["DELETE_CITIZEN"]}>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          disabled={deletingId === citizen.id}
-                          onClick={() => handleDelete(citizen.id, citizen.name, citizen.surname)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </CheckPermission>
-                    </div>
+            {citizens.map((citizen) => {
+              const licenses = parseLicenses(citizen.metadata);
+              return (
+                <TableRow key={citizen.id}>
+                  <TableCell>
+                    {citizen.image ? (
+                      <div className="size-10 rounded-full overflow-hidden">
+                        <img 
+                          src={citizen.image} 
+                          alt={`${citizen.name} ${citizen.lastName}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="size-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                        {citizen.name.charAt(0)}{citizen.lastName.charAt(0)}
+                      </div>
+                    )}
                   </TableCell>
-                </ActionsCheck>
-              </TableRow>
-            ))}
+                  <TableCell className="font-medium">
+                    <Link className={buttonVariants({ variant: "link" })} href={`/servers/${serverSlug}/citizens/${citizen.id}`}>
+                      {citizen.name} {citizen.lastName}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{format(new Date(citizen.dateOfBirth), "dd/MM/yyyy")}</TableCell>
+                  <TableCell>
+                    {licenses?.driver ? (
+                      <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs">
+                        {licenses.driver}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">None</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {licenses?.pilot ? (
+                      <span className="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded text-xs">
+                        {licenses.pilot}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">None</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {licenses?.firearm ? (
+                      <span className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-1 rounded text-xs">
+                        {licenses.firearm}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">None</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{citizen.phone ?? "-"}</TableCell>
+                  <ActionsCheck>
+                    <TableCell className="w-24">
+                      <div className="flex space-x-2">
+                        <CheckPermission permissions={["EDIT_CITIZEN"]}>
+                          <EditCitizenModal citizen={citizen} />
+                        </CheckPermission>
+                        <CheckPermission permissions={["DELETE_CITIZEN"]}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            disabled={deletingId === citizen.id}
+                            onClick={() => handleDelete(citizen.id, citizen.name, citizen.lastName)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </CheckPermission>
+                      </div>
+                    </TableCell>
+                  </ActionsCheck>
+                </TableRow>
+              );
+            })}
             {citizens.length === 0 && (
               <TableRow>
                 <TableCell 

@@ -21,19 +21,17 @@ export async function searchCitizens(query: string) {
       organizationId: server.id,
       OR: [
         { name: { contains: query, mode: "insensitive" } },
-        { surname: { contains: query, mode: "insensitive" } },
-        { socialSecurityNumber: { contains: query, mode: "insensitive" } },
+        { lastName: { contains: query, mode: "insensitive" } },
+        { charinfo: { path: ["socialSecurityNumber"], string_contains: query } },
       ],
     },
     select: {
       id: true,
       name: true,
-      surname: true,
-      socialSecurityNumber: true,
+      lastName: true,
       dateOfBirth: true,
       image: true,
-      gender: true,
-      address: true,
+      charinfo: true,
       phone: true,
       medicalRecords: {
         select: {
@@ -50,13 +48,16 @@ export async function searchCitizens(query: string) {
       },
     },
     orderBy: [
-      { surname: "asc" },
+      { lastName: "asc" },
       { name: "asc" },
     ],
     take: 10,
   });
 
-  return citizens;
+  return citizens.map(citizen => ({
+    ...citizen,
+    charinfo: typeof citizen.charinfo === 'string' ? JSON.parse(citizen.charinfo) : citizen.charinfo,
+  }));
 }
 
 export const searchCommandResults = serverAction
@@ -73,16 +74,16 @@ export const searchCommandResults = serverAction
         OR: searchTerms.map((term) => ({
           OR: [
             { name: { contains: term, mode: "insensitive" as Prisma.QueryMode } },
-            { surname: { contains: term, mode: "insensitive" as Prisma.QueryMode } },
-            { socialSecurityNumber: { contains: term, mode: "insensitive" as Prisma.QueryMode } },
+            { lastName: { contains: term, mode: "insensitive" as Prisma.QueryMode } },
+            { charinfo: { path: ["socialSecurityNumber"], string_contains: term } },
           ],
         })),
       },
       select: {
         id: true,
         name: true,
-        surname: true,
-        socialSecurityNumber: true,
+        lastName: true,
+        charinfo: true,
       },
     });
 
@@ -101,8 +102,8 @@ export const searchCommandResults = serverAction
             citizen: {
               OR: [
                 { name: { contains: query, mode: "insensitive" as Prisma.QueryMode } },
-                { surname: { contains: query, mode: "insensitive" as Prisma.QueryMode } },
-                { socialSecurityNumber: { contains: query, mode: "insensitive" as Prisma.QueryMode } },
+                { lastName: { contains: query, mode: "insensitive" as Prisma.QueryMode } },
+                { charinfo: { path: ["socialSecurityNumber"], string_contains: query } },
               ],
             },
           },
@@ -116,7 +117,7 @@ export const searchCommandResults = serverAction
           select: {
             id: true,
             name: true,
-            surname: true,
+            lastName: true,
           },
         },
       },
@@ -125,7 +126,10 @@ export const searchCommandResults = serverAction
     logger.info("Found medical records:", { count: medicalRecords.length });
 
     return {
-      citizens,
+      citizens: citizens.map(citizen => ({
+        ...citizen,
+        charinfo: typeof citizen.charinfo === 'string' ? JSON.parse(citizen.charinfo) : citizen.charinfo,
+      })),
       medicalRecords,
     };
   }); 

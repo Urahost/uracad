@@ -79,8 +79,12 @@ model Organization {
   email       String?
   colorsTheme String?  // Nom du thème de couleurs choisi
 
-  // Relations
+  // Configuration de synchronisation
+  apiUrl      String?  // URL de l'API de synchronisation
+  syncInterval Int?    // Intervalle de synchronisation en millisecondes
+  lastSyncAt  DateTime? // Dernière synchronisation
 
+  // Relations
   medicalRecords MedicalRecord[]
   Department     Department[]
   citizens       Citizen[]

@@ -29,14 +29,12 @@ export default async function EditVehiclePage({
     notFound();
   }
 
-  const citizenName = `${vehicle.citizen.name} ${vehicle.citizen.surname}`;
-
   return (
     <CheckPermission
       permissions={["EDIT_VEHICLE"]}
       mode="OR"
     >
-      <EditVehicleModal vehicle={vehicle} citizenName={citizenName} />
+      <EditVehicleModal vehicle={vehicle} citizenName={vehicle.citizen.name} />
     </CheckPermission>
   );
 } 

@@ -51,7 +51,35 @@ export default async function CitizenPage({
   const tCommon = await getTranslations("Common");
   const citizen = await prisma.citizen.findUnique({
     where: { id: citizenId },
-    include: {
+    select: {
+      id: true,
+      citizenId: true,
+      license: true,
+      name: true,
+      firstName: true,
+      lastName: true,
+      dateOfBirth: true,
+      gender: true,
+      phone: true,
+      nationality: true,
+      image: true,
+      fingerprint: true,
+      bloodType: true,
+      isDead: true,
+      isHandcuffed: true,
+      inJail: true,
+      money: true,
+      charinfo: true,
+      job: true,
+      gang: true,
+      position: true,
+      metadata: true,
+      inventory: true,
+      lastUpdated: true,
+      lastSyncedAt: true,
+      organizationId: true,
+      createdAt: true,
+      updatedAt: true,
       medicalRecords: {
         orderBy: { createdAt: "desc" },
       },
@@ -82,8 +110,12 @@ export default async function CitizenPage({
     notFound();
   }
 
+  // Extraire les informations du charinfo
+  const charinfo = typeof citizen.charinfo === 'string' ? JSON.parse(citizen.charinfo) : citizen.charinfo;
+  const metadata = typeof citizen.metadata === 'string' ? JSON.parse(citizen.metadata) : citizen.metadata;
+
   // Calculate license points for display
-  const licensePoints = citizen.driversLicensePoints;
+  const licensePoints = metadata?.licensePoints ?? 0;
   const maxLicensePoints = 12;
   const pointsPercentage = (licensePoints / maxLicensePoints) * 100;
 
@@ -116,10 +148,10 @@ export default async function CitizenPage({
     <Layout size="lg">
       <LayoutHeader>
         <LayoutTitle>
-          {citizen.name} {citizen.surname}
+          {citizen.firstName} {citizen.lastName}
         </LayoutTitle>
         <LayoutDescription>
-          SSN: {citizen.socialSecurityNumber ?? "N/A"} • {t("details.born")}{" "}
+          SSN: {charinfo?.socialSecurityNumber ?? "N/A"} • {t("details.born")}{" "}
           {new Date(citizen.dateOfBirth).toLocaleDateString()} •{" "}
           {citizen.gender}
         </LayoutDescription>
@@ -138,7 +170,7 @@ export default async function CitizenPage({
                   {citizen.image ? (
                     <img
                       src={citizen.image}
-                      alt={`${citizen.name} ${citizen.surname}`}
+                      alt={`${citizen.firstName} ${citizen.lastName}`}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -158,7 +190,7 @@ export default async function CitizenPage({
                     <div className="text-muted-foreground font-medium">
                       {t("details.address")}
                     </div>
-                    <div>{citizen.address}</div>
+                    <div>{charinfo?.address ?? "N/A"}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground font-medium">{t("details.dateOfBirth")}</div>
@@ -172,25 +204,25 @@ export default async function CitizenPage({
                     <div className="text-muted-foreground font-medium">
                       {t("details.weight")}
                     </div>
-                    <div>{citizen.weight ? `${citizen.weight} kg` : "N/A"}</div>
+                    <div>{charinfo?.weight ? `${charinfo.weight} kg` : "N/A"}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground font-medium">
                       {t("details.height")}
                     </div>
-                    <div>{citizen.height ? `${citizen.height} cm` : "N/A"}</div>
+                    <div>{charinfo?.height ? `${charinfo.height} cm` : "N/A"}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground font-medium">
                       {t("details.hairColor")}
                     </div>
-                    <div>{citizen.hairColor ?? "N/A"}</div>
+                    <div>{charinfo?.hairColor ?? "N/A"}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground font-medium">
                       {t("details.eyeColor")}
                     </div>
-                    <div>{citizen.eyeColor ?? "N/A"}</div>
+                    <div>{charinfo?.eyeColor ?? "N/A"}</div>
                   </div>
                 </div>
               </div>
@@ -211,8 +243,8 @@ export default async function CitizenPage({
                   {/* Permis de conduire */}
                   <div className="flex flex-col">
                     <label className="text-muted-foreground text-xs mb-1">{t("licenses.driver")}</label>
-                    {citizen.driversLicense ? 
-                      renderLicenseStatus(citizen.driversLicense) : 
+                    {metadata?.driversLicense ? 
+                      renderLicenseStatus(metadata.driversLicense) : 
                       (
                         <div className="px-3 py-2 rounded-md border bg-red-500/10 text-red-600 border-red-500/20 flex items-center justify-between">
                           <span className="px-2 py-0.5">
@@ -248,8 +280,8 @@ export default async function CitizenPage({
                     <div className="text-muted-foreground text-xs mb-1">
                       {t("licenses.pilot")}
                     </div>
-                    {citizen.pilotLicense ? 
-                      renderLicenseStatus(citizen.pilotLicense) : 
+                    {metadata?.pilotLicense ? 
+                      renderLicenseStatus(metadata.pilotLicense) : 
                       (
                         <div className="px-3 py-2 rounded-md border bg-red-500/10 text-red-600 border-red-500/20 flex items-center justify-between">
                           <span className="px-2 py-0.5">
@@ -263,8 +295,8 @@ export default async function CitizenPage({
                     <div className="text-muted-foreground text-xs mb-1">
                       {t("licenses.water")}
                     </div>
-                    {citizen.waterLicense ? 
-                      renderLicenseStatus(citizen.waterLicense) : 
+                    {metadata?.waterLicense ? 
+                      renderLicenseStatus(metadata.waterLicense) : 
                       (
                         <div className="px-3 py-2 rounded-md border bg-red-500/10 text-red-600 border-red-500/20 flex items-center justify-between">
                           <span className="px-2 py-0.5">
@@ -278,8 +310,8 @@ export default async function CitizenPage({
                     <div className="text-muted-foreground text-xs mb-1">
                       {t("licenses.firearms")}
                     </div>
-                    {citizen.firearmsLicense ? 
-                      renderLicenseStatus(citizen.firearmsLicense) : 
+                    {metadata?.firearmsLicense ? 
+                      renderLicenseStatus(metadata.firearmsLicense) : 
                       (
                         <div className="px-3 py-2 rounded-md border bg-red-500/10 text-red-600 border-red-500/20 flex items-center justify-between">
                           <span className="px-2 py-0.5">

@@ -22,14 +22,13 @@ export default async function AddVehiclePage({
     notFound();
   }
 
-  const citizenName = `${citizen.name} ${citizen.surname}`;
 
   return (
     <CheckPermission
       permissions={["CREATE_VEHICLE"]}
       mode="OR"
     >
-      <AddVehicleModal citizenId={citizen.id} citizenName={citizenName} />
+      <AddVehicleModal citizenId={citizen.id} citizenName={citizen.name} />
     </CheckPermission>
   );
 }

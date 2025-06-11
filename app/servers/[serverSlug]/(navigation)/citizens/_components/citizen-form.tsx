@@ -26,6 +26,7 @@ import { ImageFormItem } from "@/features/images/image-form-item";
 import { DatePicker } from "@/components/ui/date-picker";
 import { generateSSN } from "../_utils/generate-ssn";
 import { Wand2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type CitizenFormProps = {
   citizen?: Citizen | null;
@@ -41,28 +42,24 @@ export function CitizenForm({ citizen, serverSlug, onSuccess }: CitizenFormProps
     id: citizen?.id ?? undefined,
     image: citizen?.image ?? null,
     name: citizen?.name ?? "",
-    surname: citizen?.surname ?? "",
+    firstName: citizen?.firstName ?? "",
+    lastName: citizen?.lastName ?? "",
     dateOfBirth: citizen?.dateOfBirth ? new Date(citizen.dateOfBirth) : undefined,
-    socialSecurityNumber: citizen?.socialSecurityNumber ?? "",
     gender: citizen?.gender ?? "",
-    ethnicity: citizen?.ethnicity ?? "",
-    hairColor: citizen?.hairColor ?? "",
-    eyeColor: citizen?.eyeColor ?? "",
-    weight: citizen?.weight ?? undefined,
-    height: citizen?.height ?? undefined,
-    address: citizen?.address ?? "",
-    postal: citizen?.postal ?? "",
     phone: citizen?.phone ?? "",
-    occupation: citizen?.occupation ?? "",
-    additionalInfo: citizen?.additionalInfo ?? "",
-    driversLicense: citizen?.driversLicense ?? "",
-    driversLicenseCategories: citizen?.driversLicenseCategories ?? "",
-    pilotLicense: citizen?.pilotLicense ?? "",
-    pilotLicenseCategories: citizen?.pilotLicenseCategories ?? "",
-    waterLicense: citizen?.waterLicense ?? "",
-    waterLicenseCategories: citizen?.waterLicenseCategories ?? "",
-    firearmsLicense: citizen?.firearmsLicense ?? "",
-    firearmsLicenseCategories: citizen?.firearmsLicenseCategories ?? "",
+    nationality: citizen?.nationality ?? "",
+    fingerprint: citizen?.fingerprint ?? "",
+    bloodType: citizen?.bloodType ?? "",
+    isDead: citizen?.isDead ?? false,
+    isHandcuffed: citizen?.isHandcuffed ?? false,
+    inJail: citizen?.inJail ?? 0,
+    money: citizen?.money ?? {},
+    charinfo: citizen?.charinfo ?? {},
+    job: citizen?.job ?? {},
+    gang: citizen?.gang ?? {},
+    position: citizen?.position ?? {},
+    metadata: citizen?.metadata ?? {},
+    inventory: citizen?.inventory ?? {},
   };
 
   const form = useZodForm({
@@ -151,31 +148,15 @@ export function CitizenForm({ citizen, serverSlug, onSuccess }: CitizenFormProps
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John" {...field} />
+                    <Input placeholder="John Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="surname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Surname</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="dateOfBirth"
@@ -196,7 +177,204 @@ export function CitizenForm({ citizen, serverSlug, onSuccess }: CitizenFormProps
                 </FormItem>
               )}
             />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gender</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value ?? ''}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+1 (555) 000-0000" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="nationality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nationality</FormLabel>
+                  <FormControl>
+                    <Input placeholder="American" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="fingerprint"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fingerprint</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Fingerprint ID" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="bloodType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Blood Type</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value ?? ''}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select blood type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A-">A-</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B-">B-</SelectItem>
+                      <SelectItem value="AB+">AB+</SelectItem>
+                      <SelectItem value="AB-">AB-</SelectItem>
+                      <SelectItem value="O+">O+</SelectItem>
+                      <SelectItem value="O-">O-</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="isDead"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Deceased</FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="isHandcuffed"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Handcuffed</FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="inJail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Jail Time (minutes)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      min="0"
+                      {...field}
+                      onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        {/* Attributs et contact */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="socialSecurityNumber"
@@ -222,7 +400,7 @@ export function CitizenForm({ citizen, serverSlug, onSuccess }: CitizenFormProps
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="weight"
@@ -269,32 +447,17 @@ export function CitizenForm({ citizen, serverSlug, onSuccess }: CitizenFormProps
               )}
             />
           </div>
-        </div>
-        
-        {/* Attributs et contact */}
-        <div className="space-y-4">
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="gender"
+              name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Gender</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123 Main St, City" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -302,29 +465,13 @@ export function CitizenForm({ citizen, serverSlug, onSuccess }: CitizenFormProps
             
             <FormField
               control={form.control}
-              name="ethnicity"
+              name="postal"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ethnicity</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select ethnicity" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Caucasian">Caucasian</SelectItem>
-                      <SelectItem value="African American">African American</SelectItem>
-                      <SelectItem value="Hispanic">Hispanic</SelectItem>
-                      <SelectItem value="Asian">Asian</SelectItem>
-                      <SelectItem value="Native American">Native American</SelectItem>
-                      <SelectItem value="Pacific Islander">Pacific Islander</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Postal Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="12345" {...field} value={field.value ?? ''} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -334,120 +481,18 @@ export function CitizenForm({ citizen, serverSlug, onSuccess }: CitizenFormProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="hairColor"
+              name="occupation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Hair Color</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select hair color" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Black">Black</SelectItem>
-                      <SelectItem value="Brown">Brown</SelectItem>
-                      <SelectItem value="Blonde">Blonde</SelectItem>
-                      <SelectItem value="Red">Red</SelectItem>
-                      <SelectItem value="Gray">Gray</SelectItem>
-                      <SelectItem value="White">White</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="eyeColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Eye Color</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select eye color" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Brown">Brown</SelectItem>
-                      <SelectItem value="Blue">Blue</SelectItem>
-                      <SelectItem value="Green">Green</SelectItem>
-                      <SelectItem value="Hazel">Hazel</SelectItem>
-                      <SelectItem value="Amber">Amber</SelectItem>
-                      <SelectItem value="Gray">Gray</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Occupation</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Software Developer" {...field} value={field.value ?? ''} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="123 Main St, City" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="postal"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Postal Code</FormLabel>
-                <FormControl>
-                  <Input placeholder="12345" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="555-123-4567" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="occupation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Occupation</FormLabel>
-                <FormControl>
-                  <Input placeholder="Software Developer" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
         
         {/* Licences et informations additionnelles */}

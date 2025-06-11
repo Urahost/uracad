@@ -15,7 +15,8 @@ import { useTranslations } from "next-intl";
 type Citizen = {
   id: string;
   name: string;
-  surname: string;
+  firstName: string;
+  lastName: string;
 };
 
 export function CreateMedicalRecordForm({ citizen }: { citizen: Citizen }) {

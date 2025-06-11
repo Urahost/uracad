@@ -48,6 +48,12 @@ export function CitizensTable({ citizens, serverSlug, pagination }: CitizensTabl
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
+  // Parse metadata for each citizen
+  const citizensWithMetadata = citizens.map(citizen => ({
+    ...citizen,
+    metadata: typeof citizen.metadata === 'string' ? JSON.parse(citizen.metadata) : citizen.metadata
+  }));
+
   // Use nuqs for pagination state
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1).withOptions({ 
     shallow: false, 
@@ -70,10 +76,10 @@ export function CitizensTable({ citizens, serverSlug, pagination }: CitizensTabl
     },
   });
 
-  const handleDelete = (id: string, name: string, surname: string) => {
+  const handleDelete = (id: string, name: string, lastName: string) => {
     dialogManager.add({
       title: "Delete Citizen",
-      description: `Are you sure you want to delete ${name} ${surname}? This action cannot be undone.`,
+      description: `Are you sure you want to delete ${name} ${lastName}? This action cannot be undone.`,
       confirmText: "DELETE",
       action: {
         label: "Delete",
@@ -143,49 +149,49 @@ export function CitizensTable({ citizens, serverSlug, pagination }: CitizensTabl
             </TableRow>
           </TableHeader>
           <TableBody>
-            {citizens.map((citizen) => (
+            {citizensWithMetadata.map((citizen) => (
               <TableRow key={citizen.id}>
                 <TableCell>
                   {citizen.image ? (
                     <div className="size-10 rounded-full overflow-hidden">
                       <img 
                         src={citizen.image} 
-                        alt={`${citizen.name} ${citizen.surname}`}
+                        alt={`${citizen.name} ${citizen.lastName}`}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ) : (
                     <div className="size-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
-                      {citizen.name.charAt(0)}{citizen.surname.charAt(0)}
+                      {citizen.name.charAt(0)}{citizen.lastName.charAt(0)}
                     </div>
                   )}
                 </TableCell>
                 <TableCell className="font-medium">
-                  {citizen.name} {citizen.surname}
+                  {citizen.name} {citizen.lastName}
                 </TableCell>
                 <TableCell>{format(new Date(citizen.dateOfBirth), "dd/MM/yyyy")}</TableCell>
                 <TableCell>
-                  {citizen.driversLicense ? (
+                  {citizen.metadata?.driversLicense ? (
                     <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs">
-                      {citizen.driversLicense}
+                      {citizen.metadata.driversLicense}
                     </span>
                   ) : (
                     <span className="text-muted-foreground text-xs">None</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  {citizen.pilotLicense ? (
+                  {citizen.metadata?.pilotLicense ? (
                     <span className="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded text-xs">
-                      {citizen.pilotLicense}
+                      {citizen.metadata.pilotLicense}
                     </span>
                   ) : (
                     <span className="text-muted-foreground text-xs">None</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  {citizen.firearmsLicense ? (
+                  {citizen.metadata?.firearmsLicense ? (
                     <span className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-1 rounded text-xs">
-                      {citizen.firearmsLicense}
+                      {citizen.metadata.firearmsLicense}
                     </span>
                   ) : (
                     <span className="text-muted-foreground text-xs">None</span>
@@ -203,7 +209,7 @@ export function CitizensTable({ citizens, serverSlug, pagination }: CitizensTabl
                       variant="ghost" 
                       size="icon"
                       disabled={deletingId === citizen.id}
-                      onClick={() => handleDelete(citizen.id, citizen.name, citizen.surname)}
+                      onClick={() => handleDelete(citizen.id, citizen.name, citizen.lastName)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

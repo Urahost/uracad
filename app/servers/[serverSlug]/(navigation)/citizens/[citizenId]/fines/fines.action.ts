@@ -58,13 +58,13 @@ export async function createFineAction(data: FineCreateSchemaType) {
 
         // Puis mettre à jour les points de permis uniquement si l'amende est créée avec succès
         if (input.licensePoints && input.licensePoints > 0) {
+          const currentMetadata = typeof citizen.metadata === 'string' ? JSON.parse(citizen.metadata) : citizen.metadata ?? {};
+          const newPoints = Math.max(0, (currentMetadata.driversLicensePoints ?? 0) - input.licensePoints);
           await prisma.citizen.update({
             where: { id: citizen.id },
             data: {
-              driversLicensePoints: {
-                decrement: input.licensePoints,
-              },
-            },
+              metadata: JSON.stringify({ ...currentMetadata, driversLicensePoints: newPoints })
+            }
           });
         }
 
@@ -104,13 +104,13 @@ export async function updateFineAction(data: FineUpdateSchemaType) {
           existingFine.licensePoints !== input.licensePoints) {
         const pointDifference = (existingFine.licensePoints ?? 0) - input.licensePoints;
         
+        const currentMetadata = typeof existingFine.citizen.metadata === 'string' ? JSON.parse(existingFine.citizen.metadata) : existingFine.citizen.metadata ?? {};
+        const newPoints = (currentMetadata.driversLicensePoints ?? 0) + pointDifference;
         await prisma.citizen.update({
           where: { id: existingFine.citizenId },
           data: {
-            driversLicensePoints: {
-              increment: pointDifference,
-            },
-          },
+            metadata: JSON.stringify({ ...currentMetadata, driversLicensePoints: newPoints })
+          }
         });
       }
 
@@ -155,13 +155,13 @@ export async function deleteFineAction(data: { id: string }) {
 
       // Si l'amende a retiré des points de permis, les restituer
       if (existingFine.licensePoints && existingFine.licensePoints > 0) {
+        const currentMetadata = typeof existingFine.citizen.metadata === 'string' ? JSON.parse(existingFine.citizen.metadata) : existingFine.citizen.metadata ?? {};
+        const newPoints = (currentMetadata.driversLicensePoints ?? 0) + existingFine.licensePoints;
         await prisma.citizen.update({
           where: { id: existingFine.citizenId },
           data: {
-            driversLicensePoints: {
-              increment: existingFine.licensePoints,
-            },
-          },
+            metadata: JSON.stringify({ ...currentMetadata, driversLicensePoints: newPoints })
+          }
         });
       }
 

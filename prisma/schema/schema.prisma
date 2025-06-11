@@ -3,7 +3,6 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["prismaSchemaFolder"]
 }
 
 datasource db {
@@ -86,51 +85,50 @@ model ActiveOfficer {
 model Citizen {
   id                   String   @id @default(cuid())
   image                String?
-  name                 String
-  surname              String
+  citizenId            String   @unique // ID unique du citoyen dans le jeu (ex: HPP63796)
+  license              String?  // License du joueur
+  name                 String   // Nom d'affichage
+  money                Json     // { cash: number, bank: number, crypto: number }
+  charinfo             Json     // Informations du personnage
+  job                  Json?    // Informations sur le métier
+  gang                 Json?    // Informations sur le gang
+  position             Json?    // Position actuelle { x: number, y: number, z: number }
+  metadata             Json     // Métadonnées du joueur
+  inventory            Json?    // Inventaire du joueur
+  lastUpdated          DateTime @default(now()) @updatedAt
+  lastSyncedAt         DateTime? // Dernière synchronisation avec l'API
+
+  // Champs extraits de charinfo pour faciliter la recherche
+  firstName            String
+  lastName             String
   dateOfBirth          DateTime
-  socialSecurityNumber String?
-  gender               String
-  ethnicity            String?
-  hairColor            String?
-  eyeColor             String?
-  weight               Float?
-  height               Float?
-  address              String
-  postal               String?
   phone                String?
-  occupation           String?
-  additionalInfo       String?
+  gender               String
+  nationality          String?
 
-  driversLicense           String?
-  driversLicenseCategories String?
+  // Champs extraits de metadata pour faciliter la recherche
+  fingerprint          String?
+  bloodType            String?
+  isDead               Boolean  @default(false)
+  isHandcuffed         Boolean  @default(false)
+  inJail               Int      @default(0)
 
-  driversLicensePoints Int @default(12) // Points de permis (12 points par défaut)
+  // Relations
+  organizationId       String
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vehicles             Vehicle[]
+  medicalRecords       MedicalRecord[]
+  fines                Fine[]
+  judicialCases        JudicialCase[]
+  warrants             Warrant[]
 
-  pilotLicense String?
-
-  pilotLicenseCategories String?
-
-  waterLicense           String?
-  waterLicenseCategories String?
-
-  firearmsLicense           String?
-  firearmsLicenseCategories String?
-
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  medicalRecords MedicalRecord[]
-
-  vehicles      Vehicle[]
-  fines         Fine[] // Relation avec les amendes reçues
-  judicialCases JudicialCase[] // Relation avec les casiers judiciaires
-  warrants      Warrant[] // Relation avec les mandats
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@index([organizationId])
+  @@index([citizenId])
+  @@index([firstName, lastName])
+  @@index([phone])
 }
 
 model MedicalRecord {
@@ -174,47 +172,85 @@ model MedicalRecord {
 }
 
 model Vehicle {
-  id             String       @id @default(cuid())
-  citizenId      String
-  citizen        Citizen      @relation(fields: [citizenId], references: [id], onDelete: Cascade)
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id                   String   @id @default(cuid())
+  citizenId            String
+  citizen              Citizen  @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  organizationId       String
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  // Informations du véhicule
-  make         String // Marque (ex: Toyota, BMW)
-  model        String // Modèle (ex: Corolla, X5)
-  year         Int? // Année de fabrication
-  licensePlate String // Plaque d'immatriculation
-  vin          String? // Numéro d'identification du véhicule
+  // Identifiants uniques
+  plate                String   @unique // Plaque d'immatriculation
+  vin                  String?  // Numéro d'identification du véhicule
+  hash                 String?  // Hash du véhicule
+  vehicle              String?  // Nom du véhicule (ex: "g63")
 
-  // Caractéristiques
-  color    String // Couleur
-  type     String // Type de véhicule (voiture, moto, camion, etc.)
-  category String? // Catégorie (berline, SUV, etc.)
+  // Informations de base
+  model                String   // Modèle du véhicule
+  brand                String?  // Marque du véhicule
+  type                 String?  // Type de véhicule (car, bike, etc.)
+  class                String?  // Classe du véhicule
 
+  // État et caractéristiques
+  fuel                 Float?   // Niveau de carburant
+  engineHealth         Float?   // État du moteur
+  bodyHealth           Float?   // État de la carrosserie
+  mileage              Float?   // Kilométrage
+  color                Json?    // Couleurs { primary: string, secondary: string, pearlescent: string }
+  
   // État et statut
-  status             String  @default("ACTIVE") // ACTIVE, STOLEN, IMPOUNDED, DESTROYED
-  registrationStatus String  @default("REGISTERED") // REGISTERED, EXPIRED, SUSPENDED
-  insuranceStatus    String? // INSURED, UNINSURED
+  state                String   @default("out") // out, in, impound
+  garage               String?  // Garage actuel
+  garageState          String?  // État dans le garage
+  stored               Boolean  @default(true) // Si le véhicule est stocké
+  wheelclamp           Boolean  @default(false) // Si le véhicule est immobilisé
 
-  // Dates importantes
-  registrationExpiryDate DateTime?
-  lastInspectionDate     DateTime?
+  // Modifications et personnalisation
+  mods                 Json?    // Modifications du véhicule
+  extras               Json?    // Extras activés/désactivés
+  damage               Json?    // Dégâts du véhicule
+  customName           String?  // Nom personnalisé du véhicule
+  isFavorite           Boolean  @default(false) // Véhicule favori
+
+  // Informations de financement
+  depotPrice           Float?   // Prix de dépôt
+  drivingDistance      Float?   // Distance parcourue
+  balance              Float?   // Solde restant
+  paymentAmount        Float?   // Montant des paiements
+  paymentsLeft         Int?     // Nombre de paiements restants
+  financeTime          DateTime? // Date de financement
+
+  // Informations de mise en fourrière
+  impoundedTime        DateTime? // Date de mise en fourrière
+  impoundReason        String?  // Raison de la mise en fourrière
+  impoundedBy          String?  // Qui a mis en fourrière
+  impoundType          String?  // Type de mise en fourrière
+  impoundFee           Float?   // Frais de fourrière
+  impoundTime          DateTime? // Durée de la mise en fourrière
 
   // Informations supplémentaires
-  modifications  String? // Modifications apportées au véhicule
-  additionalInfo String? // Informations supplémentaires
-
-  // Relations
-  fines Fine[] // Amendes liées à ce véhicule
+  lastPosition         Json?    // Dernière position connue
+  glovebox             Json?    // Contenu de la boîte à gants
+  trunk                Json?    // Contenu du coffre
+  job                  String?  // Métier associé au véhicule
+  storedInGang         String?  // Gang qui stocke le véhicule
+  sharedGarageId       String?  // ID du garage partagé
 
   // Métadonnées
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  lastUpdated          DateTime @default(now()) @updatedAt
+  lastSyncedAt         DateTime? // Dernière synchronisation avec l'API
+
+  // Relations
+  fines                Fine[]   // Amendes liées à ce véhicule
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@index([citizenId])
   @@index([organizationId])
-  @@index([licensePlate])
+  @@index([plate])
+  @@index([state])
+  @@index([garage])
+  @@index([type])
 }
 
 // Modèle pour les infractions prédéfinies du code pénal

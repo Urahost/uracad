@@ -10,6 +10,9 @@ type CitizenProfileProps = {
 };
 
 export function CitizenProfile({ citizen }: CitizenProfileProps) {
+  const charinfo = typeof citizen.charinfo === 'string' ? JSON.parse(citizen.charinfo) : citizen.charinfo;
+  const metadata = typeof citizen.metadata === 'string' ? JSON.parse(citizen.metadata) : citizen.metadata;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Section principale */}
@@ -22,12 +25,12 @@ export function CitizenProfile({ citizen }: CitizenProfileProps) {
             {citizen.image ? (
               <img 
                 src={citizen.image} 
-                alt={`${citizen.name} ${citizen.surname}`} 
+                alt={`${citizen.name} ${citizen.lastName}`} 
                 className="size-32 rounded-full object-cover"
               />
             ) : (
               <div className="size-32 rounded-full bg-muted flex items-center justify-center text-2xl font-semibold">
-                {citizen.name.charAt(0)}{citizen.surname.charAt(0)}
+                {citizen.name.charAt(0)}{citizen.lastName.charAt(0)}
               </div>
             )}
           </div>
@@ -40,7 +43,7 @@ export function CitizenProfile({ citizen }: CitizenProfileProps) {
             
             <div>
               <p className="text-sm text-muted-foreground">Surname</p>
-              <p className="font-medium">{citizen.surname}</p>
+              <p className="font-medium">{citizen.lastName}</p>
             </div>
           </div>
           
@@ -55,7 +58,7 @@ export function CitizenProfile({ citizen }: CitizenProfileProps) {
           
           <div>
             <p className="text-sm text-muted-foreground">Social Security Number</p>
-            <p className="font-medium">{citizen.socialSecurityNumber ?? "Not specified"}</p>
+            <p className="font-medium">{charinfo?.socialSecurityNumber ?? "Not specified"}</p>
           </div>
         </CardContent>
       </Card>
@@ -69,59 +72,59 @@ export function CitizenProfile({ citizen }: CitizenProfileProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Gender</p>
-              <p className="font-medium">{citizen.gender}</p>
+              <p className="font-medium">{charinfo?.gender ?? "Not specified"}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">Ethnicity</p>
-              <p className="font-medium">{citizen.ethnicity ?? "Not specified"}</p>
+              <p className="font-medium">{charinfo?.ethnicity ?? "Not specified"}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Hair Color</p>
-              <p className="font-medium">{citizen.hairColor ?? "Not specified"}</p>
+              <p className="font-medium">{charinfo?.hairColor ?? "Not specified"}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">Eye Color</p>
-              <p className="font-medium">{citizen.eyeColor ?? "Not specified"}</p>
+              <p className="font-medium">{charinfo?.eyeColor ?? "Not specified"}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Weight (kg)</p>
-              <p className="font-medium">{citizen.weight ?? "Not specified"}</p>
+              <p className="font-medium">{charinfo?.weight ?? "Not specified"}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">Height (cm)</p>
-              <p className="font-medium">{citizen.height ?? "Not specified"}</p>
+              <p className="font-medium">{charinfo?.height ?? "Not specified"}</p>
             </div>
           </div>
           
           <div>
             <p className="text-sm text-muted-foreground">Address</p>
-            <p className="font-medium">{citizen.address}</p>
+            <p className="font-medium">{charinfo?.address ?? "Not specified"}</p>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Postal Code</p>
-              <p className="font-medium">{citizen.postal ?? "Not specified"}</p>
+              <p className="font-medium">{charinfo?.postal ?? "Not specified"}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">Phone Number</p>
-              <p className="font-medium">{citizen.phone ?? "Not specified"}</p>
+              <p className="font-medium">{charinfo?.phone ?? "Not specified"}</p>
             </div>
           </div>
           
           <div>
             <p className="text-sm text-muted-foreground">Occupation</p>
-            <p className="font-medium">{citizen.occupation ?? "Not specified"}</p>
+            <p className="font-medium">{charinfo?.occupation ?? "Not specified"}</p>
           </div>
         </CardContent>
       </Card>
@@ -135,55 +138,55 @@ export function CitizenProfile({ citizen }: CitizenProfileProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Drivers License</p>
-              <p className="font-medium">{citizen.driversLicense}</p>
+              <p className="font-medium">{metadata?.driversLicense ?? "None"}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">DL Categories</p>
-              <p className="font-medium">{citizen.driversLicenseCategories ?? "None"}</p>
+              <p className="font-medium">{metadata?.driversLicenseCategories ?? "None"}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Pilot License</p>
-              <p className="font-medium">{citizen.pilotLicense ?? "None"}</p>
+              <p className="font-medium">{metadata?.pilotLicense ?? "None"}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">PL Categories</p>
-              <p className="font-medium">{citizen.pilotLicenseCategories ?? "None"}</p>
+              <p className="font-medium">{metadata?.pilotLicenseCategories ?? "None"}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Water License</p>
-              <p className="font-medium">{citizen.waterLicense ?? "None"}</p>
+              <p className="font-medium">{metadata?.waterLicense ?? "None"}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">WL Categories</p>
-              <p className="font-medium">{citizen.waterLicenseCategories ?? "None"}</p>
+              <p className="font-medium">{metadata?.waterLicenseCategories ?? "None"}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Firearms License</p>
-              <p className="font-medium">{citizen.firearmsLicense ?? "None"}</p>
+              <p className="font-medium">{metadata?.firearmsLicense ?? "None"}</p>
             </div>
             
             <div>
               <p className="text-sm text-muted-foreground">FL Categories</p>
-              <p className="font-medium">{citizen.firearmsLicenseCategories ?? "None"}</p>
+              <p className="font-medium">{metadata?.firearmsLicenseCategories ?? "None"}</p>
             </div>
           </div>
           
-          {citizen.additionalInfo && (
+          {metadata?.additionalInfo && (
             <div>
               <p className="text-sm text-muted-foreground">Additional Information</p>
-              <p className="font-medium whitespace-pre-line">{citizen.additionalInfo}</p>
+              <p className="font-medium whitespace-pre-line">{metadata.additionalInfo}</p>
             </div>
           )}
         </CardContent>

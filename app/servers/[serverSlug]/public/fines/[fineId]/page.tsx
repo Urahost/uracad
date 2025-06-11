@@ -187,10 +187,10 @@ export default async function SingleFinePage({
                         {t("involvedVehicle")}
                       </h3>
                       <p className="font-medium">
-                        {fine.vehicle.make} {fine.vehicle.model}
+                        {fine.vehicle.vehicle}
                       </p>
                       <p className="text-muted-foreground text-sm">
-                        {fine.vehicle.licensePlate} - {fine.vehicle.color}
+                        {fine.vehicle.plate}
                       </p>
                     </div>
                   </div>

@@ -18,14 +18,10 @@ import { getVehiclesByCitizenAction } from "../vehicles/vehicles.action";
 import { logger } from "@/lib/logger";
 import type { FineCreateSchemaType } from "./fines/fines.schema";
 import { PlusIcon } from "lucide-react";
+import type { Citizen } from "@prisma/client";
 
 type AddFineDialogProps = {
-  citizen: {
-    id: string;
-    name: string;
-    surname: string;
-    driversLicensePoints: number;
-  };
+  citizen: Pick<Citizen, 'id' | 'name' | 'lastName' | 'metadata'>;
 };
 
 type VehicleOption = {
@@ -37,6 +33,21 @@ type VehicleOption = {
   year?: number | null;
   type: string;
   status: string;
+};
+
+type VehicleResponse = {
+  id: string;
+  brand: string | null;
+  model: string;
+  plate: string;
+  vin: string | null;
+  color: unknown;
+  type: string | null;
+  state: string;
+};
+
+type VehicleActionResponse = {
+  data: VehicleResponse[];
 };
 
 export default function AddFineDialog({
@@ -56,11 +67,25 @@ export default function AddFineDialog({
         citizenId: citizen.id,
       });
       
-      if (response?.data) {
-        setVehicles(response.data);
-      } else {
+      if (!response?.data) {
         setVehicles([]);
+        return;
       }
+
+      const mappedVehicles: VehicleOption[] = response.data.map(vehicle => {
+        const colorValue = typeof vehicle.color === 'string' ? vehicle.color : null;
+        return {
+          id: vehicle.id,
+          make: vehicle.brand ?? 'Unknown',
+          model: vehicle.model,
+          licensePlate: vehicle.plate,
+          color: colorValue ?? 'Unknown',
+          year: null,
+          type: (vehicle.type as string | undefined) ?? 'Unknown',
+          status: vehicle.state
+        };
+      });
+      setVehicles(mappedVehicles);
     } catch (error) {
       logger.error("Failed to load vehicles:", error);
       setVehicles([]);
@@ -103,7 +128,7 @@ export default function AddFineDialog({
       <DialogContent className="sm:max-w-3xl max-h-[90vh]">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-xl">
-            {t("addFine")} - {citizen.name} {citizen.surname}
+            {t("addFine")} - {citizen.name} {citizen.lastName}
           </DialogTitle>
         </DialogHeader>
         <FineForm
@@ -111,7 +136,7 @@ export default function AddFineDialog({
           submitForm={onSubmit}
           isSubmitting={isPending}
           onCancel={() => setIsOpen(false)}
-          currentLicensePoints={citizen.driversLicensePoints}
+          currentLicensePoints={typeof citizen.metadata === 'string' ? JSON.parse(citizen.metadata).driversLicensePoints ?? 0 : 0}
           vehicles={vehicles}
         />
       </DialogContent>

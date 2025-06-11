@@ -52,7 +52,7 @@ export default async function RecordPage({
         <LayoutHeader>
           <LayoutTitle>Medical Record</LayoutTitle>
           <LayoutDescription>
-            Details for {record.citizen.name} {record.citizen.surname}
+            Details for {record.citizen.name} {record.citizen.lastName}
           </LayoutDescription>
         </LayoutHeader>
         <LayoutActions className="gap-2">
@@ -80,7 +80,7 @@ export default async function RecordPage({
                       Name
                     </div>
                     <div>
-                      {record.citizen.name} {record.citizen.surname}
+                      {record.citizen.name} {record.citizen.lastName}
                     </div>
                   </div>
                 </div>

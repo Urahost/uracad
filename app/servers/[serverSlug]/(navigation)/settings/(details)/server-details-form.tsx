@@ -26,14 +26,24 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ServerDetailsFormSchema, type ServerDetailsFormSchemaType } from "../server.schema";
 import { ThemeSelector } from "@/components/theme-selector";
+import { SyncConfigForm } from "@/features/sync/sync-config-form";
 
-type ProductFormProps = {
+type ServerDetailsFormProps = {
   defaultValues: ServerDetailsFormSchemaType;
   organizationId: string;
   currentTheme?: string;
+  organization: {
+    apiUrl: string | null;
+    syncInterval: number | null;
+  };
 };
 
-export const ServerDetailsForm = ({ defaultValues, organizationId, currentTheme }: ProductFormProps) => {
+export const ServerDetailsForm = ({
+  defaultValues,
+  organizationId,
+  currentTheme,
+  organization,
+}: ServerDetailsFormProps) => {
   const form = useZodForm({
     schema: ServerDetailsFormSchema,
     defaultValues,
@@ -60,12 +70,15 @@ export const ServerDetailsForm = ({ defaultValues, organizationId, currentTheme 
     },
   });
 
+  const onSubmit = async (values: ServerDetailsFormSchemaType) => {
+    return mutation.mutateAsync(values);
+  };
+
   return (
     <FormAutoSave
       form={form}
-      onSubmit={async (v) => {
-        return mutation.mutateAsync(v);
-      }}
+      onSubmit={onSubmit}
+      autoSaveMs={1000}
       className="flex w-full flex-col gap-6 lg:gap-8"
     >
       <FormAutoSaveStickyBar />
@@ -127,6 +140,23 @@ export const ServerDetailsForm = ({ defaultValues, organizationId, currentTheme 
         </CardHeader>
         <CardContent>
           <ThemeSelector organizationId={organizationId} currentTheme={currentTheme} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Server synchronization</CardTitle>
+          <CardDescription>
+            Configure the API endpoint and synchronization settings for your server.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SyncConfigForm 
+            organizationId={organizationId}
+            defaultValues={{
+              apiUrl: organization.apiUrl ?? '',
+              syncInterval: organization.syncInterval ?? 300000,
+            }}
+          />
         </CardContent>
       </Card>
       <div className="flex justify-end p-6">

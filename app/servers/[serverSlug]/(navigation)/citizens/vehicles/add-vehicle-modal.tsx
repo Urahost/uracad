@@ -3,8 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { VehicleForm } from "./vehicle-form";
-import type { CreateVehicleSchemaType} from "./vehicles.action";
+import { VehicleForm, transformFormToServerData, type VehicleFormValues } from "./vehicle-form";
 import { createVehicleAction } from "./vehicles.action";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -25,10 +24,11 @@ export default function AddVehicleModal({
     router.back();
   };
 
-  const onSubmit = async (data: CreateVehicleSchemaType) => {
+  const onSubmit = async (data: VehicleFormValues) => {
     startTransition(async () => {
       try {
-        await createVehicleAction(data);
+        const serverData = transformFormToServerData(data, citizenId);
+        await createVehicleAction(serverData);
         toast.success(t("addSuccess"));
         onClose();
       } catch (error) {

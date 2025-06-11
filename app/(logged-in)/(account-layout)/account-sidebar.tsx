@@ -31,6 +31,9 @@ type AuthServer = {
   metadata: string | null;
   email: string | null;
   colorsTheme: string | null;
+  apiUrl: string | null;
+  syncInterval: string | null;
+  lastSyncAt: Date | null;
 };
 
 export function AccountSidebar({ userServers }: { userServers: Organization[] }) {
@@ -47,7 +50,10 @@ export function AccountSidebar({ userServers }: { userServers: Organization[] })
     createdAt: server.createdAt,
     metadata: server.metadata,
     email: server.email,
-    colorsTheme: server.metadata ? JSON.parse(server.metadata).colorsTheme ?? null : null
+    colorsTheme: server.metadata ? JSON.parse(server.metadata).colorsTheme ?? null : null,
+    apiUrl: null,
+    syncInterval: null,
+    lastSyncAt: null
   })) satisfies AuthServer[];
 
   return (

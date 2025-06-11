@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { VehicleStatus } from "@/features/vehicles/vehicle-status";
 import type { Citizen, Vehicle } from "@prisma/client";
 import { PencilIcon, PlusIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";
@@ -31,19 +30,7 @@ export default function VehiclesSection({
   
   const citizenId = citizen.id;
   const addVehicleHref = `/servers/${serverSlug}/citizens/${citizenId}/add-vehicle`;
-  
-  const renderRegistrationStatus = (status: string) => {
-    switch (status) {
-      case "REGISTERED":
-        return <span className="text-green-600 font-medium">{t("registration.registered")}</span>;
-      case "EXPIRED":
-        return <span className="text-amber-600 font-medium">{t("registration.expired")}</span>;
-      case "SUSPENDED":
-        return <span className="text-red-600 font-medium">{t("registration.suspended")}</span>;
-      default:
-        return <span>{status}</span>;
-    }
-  };
+
 
   return (
 
@@ -74,8 +61,7 @@ export default function VehiclesSection({
               <TableRow>
                 <TableHead>{t("details.makeModel")}</TableHead>
                 <TableHead>{t("details.licensePlate")}</TableHead>
-                <TableHead>{t("details.status")}</TableHead>
-                <TableHead>{t("details.registration")}</TableHead>
+                <TableHead>VIN</TableHead>
                 <CheckPermission 
                   permissions={["EDIT_VEHICLE", "DELETE_VEHICLE"]} 
                   mode="OR"
@@ -87,19 +73,9 @@ export default function VehiclesSection({
             <TableBody>
               {vehicles.map((vehicle) => (
                 <TableRow key={vehicle.id}>
-                  <TableCell className="font-medium">
-                    {vehicle.make} {vehicle.model} ({vehicle.year ?? "N/A"})
-                    <div className="text-xs text-muted-foreground">
-                      {vehicle.type} • {vehicle.color}
-                    </div>
-                  </TableCell>
-                  <TableCell>{vehicle.licensePlate}</TableCell>
-                  <TableCell>
-                    <VehicleStatus status={vehicle.status} />
-                  </TableCell>
-                  <TableCell>
-                    {renderRegistrationStatus(vehicle.registrationStatus)}
-                  </TableCell>
+                  <TableCell className="font-medium">{vehicle.vehicle}</TableCell>
+                  <TableCell>{vehicle.plate}</TableCell>
+                  <TableCell>{vehicle.vin ?? "-"}</TableCell>
                   <CheckPermission 
                     permissions={["EDIT_VEHICLE", "DELETE_VEHICLE"]} 
                     mode="OR"

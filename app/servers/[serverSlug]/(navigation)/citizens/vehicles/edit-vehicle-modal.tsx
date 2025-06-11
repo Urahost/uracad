@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import type { VehicleFormValues } from "./vehicle-form";
-import { VehicleForm } from "./vehicle-form";
-import { updateVehicleAction } from "./vehicles.action";
+import { VehicleForm, transformFormToServerData } from "./vehicle-form";
+import { updateVehicleAction, type CreateVehicleSchemaType } from "./vehicles.action";
 import { toast } from "sonner";
 import type { Vehicle } from "@prisma/client";
 import { useTranslations } from "next-intl";
@@ -27,26 +27,18 @@ export default function EditVehicleModal({
   };
 
   const defaultValues: VehicleFormValues = {
-    make: vehicle.make,
+    plate: vehicle.plate,
     model: vehicle.model,
-    year: vehicle.year ?? undefined,
-    licensePlate: vehicle.licensePlate,
+    state: vehicle.state.toUpperCase() as "ACTIVE" | "STOLEN" | "IMPOUNDED" | "DESTROYED",
+    registrationStatus: "REGISTERED",
     vin: vehicle.vin ?? undefined,
-    color: vehicle.color,
-    type: vehicle.type,
-    category: vehicle.category ?? undefined,
-    status: vehicle.status as "ACTIVE" | "STOLEN" | "IMPOUNDED" | "DESTROYED",
-    registrationStatus: vehicle.registrationStatus as "REGISTERED" | "EXPIRED" | "SUSPENDED",
-    insuranceStatus: vehicle.insuranceStatus ?? undefined,
-    modifications: vehicle.modifications ?? undefined,
-    additionalInfo: vehicle.additionalInfo ?? undefined,
   };
 
-  const onSubmit = async (formData: VehicleFormValues) => {
+  const onSubmit = async (data: CreateVehicleSchemaType) => {
     startTransition(async () => {
       try {
         await updateVehicleAction({
-          ...formData,
+          ...data,
           id: vehicle.id,
         });
         toast.success(t("editSuccess"));
@@ -56,6 +48,11 @@ export default function EditVehicleModal({
         logger.error(error);
       }
     });
+  };
+
+  const handleFormSubmit = async (formData: VehicleFormValues) => {
+    const serverData = transformFormToServerData(formData, vehicle.citizenId);
+    await onSubmit(serverData);
   };
 
   return (
@@ -69,7 +66,7 @@ export default function EditVehicleModal({
 
         <VehicleForm
           defaultValues={defaultValues}
-          onSubmit={onSubmit}
+          onSubmit={handleFormSubmit}
           isSubmitting={isPending}
           onCancel={onClose}
           citizenId={vehicle.citizenId}

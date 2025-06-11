@@ -104,7 +104,7 @@ export default async function MedicalRecordPage({
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Patient</h3>
                   <p className="text-base">
-                    {record.citizen.name} {record.citizen.surname}
+                    {record.citizen.name} {record.citizen.lastName}
                   </p>
                 </div>
                 <div>

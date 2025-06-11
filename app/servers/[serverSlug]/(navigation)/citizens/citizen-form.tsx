@@ -38,28 +38,24 @@ export function CitizenForm({ citizen, serverSlug }: CitizenFormProps) {
     id: citizen?.id ?? undefined,
     image: citizen?.image ?? null,
     name: citizen?.name ?? "",
-    surname: citizen?.surname ?? "",
+    firstName: citizen?.firstName ?? "",
+    lastName: citizen?.lastName ?? "",
     dateOfBirth: citizen?.dateOfBirth ? new Date(citizen.dateOfBirth) : undefined,
-    socialSecurityNumber: citizen?.socialSecurityNumber ?? "",
     gender: citizen?.gender ?? "",
-    ethnicity: citizen?.ethnicity ?? "",
-    hairColor: citizen?.hairColor ?? "",
-    eyeColor: citizen?.eyeColor ?? "",
-    weight: citizen?.weight ?? undefined,
-    height: citizen?.height ?? undefined,
-    address: citizen?.address ?? "",
-    postal: citizen?.postal ?? "",
     phone: citizen?.phone ?? "",
-    occupation: citizen?.occupation ?? "",
-    additionalInfo: citizen?.additionalInfo ?? "",
-    driversLicense: citizen?.driversLicense ?? "",
-    driversLicenseCategories: citizen?.driversLicenseCategories ?? "",
-    pilotLicense: citizen?.pilotLicense ?? "",
-    pilotLicenseCategories: citizen?.pilotLicenseCategories ?? "",
-    waterLicense: citizen?.waterLicense ?? "",
-    waterLicenseCategories: citizen?.waterLicenseCategories ?? "",
-    firearmsLicense: citizen?.firearmsLicense ?? "",
-    firearmsLicenseCategories: citizen?.firearmsLicenseCategories ?? "",
+    nationality: citizen?.nationality ?? "",
+    fingerprint: citizen?.fingerprint ?? "",
+    bloodType: citizen?.bloodType ?? "",
+    isDead: citizen?.isDead ?? false,
+    isHandcuffed: citizen?.isHandcuffed ?? false,
+    inJail: citizen?.inJail ?? 0,
+    money: citizen?.money ?? {},
+    charinfo: citizen?.charinfo ?? {},
+    job: citizen?.job ?? {},
+    gang: citizen?.gang ?? {},
+    position: citizen?.position ?? {},
+    metadata: citizen?.metadata ?? {},
+    inventory: citizen?.inventory ?? {},
   };
 
   const form = useZodForm({
@@ -111,110 +107,38 @@ export function CitizenForm({ citizen, serverSlug }: CitizenFormProps) {
 
   return (
     <Form form={form} onSubmit={onSubmit}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Colonne 1: Infos personnelles */}
-        <div className="space-y-4">
-          <div className="mb-6">
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Colonne 1: Infos personnelles */}
+          <div className="space-y-4">
+            <div className="mb-6">
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Profile Image</FormLabel>
+                    <FormControl>
+                      <ImageFormItem
+                        className="size-32 mx-auto rounded-full"
+                        onChange={(url) => field.onChange(url)}
+                        imageUrl={field.value ?? null}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
             <FormField
               control={form.control}
-              name="image"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Profile Image</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <ImageFormItem
-                      className="size-32 mx-auto rounded-full"
-                      onChange={(url) => field.onChange(url)}
-                      imageUrl={field.value ?? null}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="surname"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Surname</FormLabel>
-                <FormControl>
-                  <Input placeholder="Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="dateOfBirth"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth</FormLabel>
-                <FormControl>
-                  <div className="flex w-full">
-                    <DatePicker
-                      date={field.value ? new Date(field.value) : undefined}
-                      onDateChange={field.onChange}
-                      placeholder="Select date of birth"
-                      className="w-full"
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="socialSecurityNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Social Security Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="XXX-XX-XXXX" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="weight"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Weight (kg)</FormLabel>
-                  <FormControl>
-                    <Input
-                      inputMode="numeric" 
-                      placeholder="70"
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={(e) => {
-                        const val = e.target.value ? parseFloat(e.target.value) : null;
-                        field.onChange(val);
-                      }}
-                    />
+                    <Input placeholder="John" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -223,53 +147,13 @@ export function CitizenForm({ citizen, serverSlug }: CitizenFormProps) {
             
             <FormField
               control={form.control}
-              name="height"
+              name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Height (cm)</FormLabel>
+                  <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input
-                      inputMode="numeric"
-                      placeholder="175"
-                      {...field}
-                      value={field.value ?? ''}
-                      onChange={(e) => {
-                        const val = e.target.value ? parseFloat(e.target.value) : null;
-                        field.onChange(val);
-                      }}
-                    />
+                    <Input placeholder="John" {...field} />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-        
-        {/* Colonne 2: Attributs et contact */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -277,59 +161,171 @@ export function CitizenForm({ citizen, serverSlug }: CitizenFormProps) {
             
             <FormField
               control={form.control}
-              name="ethnicity"
+              name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ethnicity</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select ethnicity" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Caucasian">Caucasian</SelectItem>
-                      <SelectItem value="African American">African American</SelectItem>
-                      <SelectItem value="Hispanic">Hispanic</SelectItem>
-                      <SelectItem value="Asian">Asian</SelectItem>
-                      <SelectItem value="Native American">Native American</SelectItem>
-                      <SelectItem value="Pacific Islander">Pacific Islander</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of Birth</FormLabel>
+                  <FormControl>
+                    <div className="flex w-full">
+                      <DatePicker
+                        date={field.value ? new Date(field.value) : undefined}
+                        onDateChange={field.onChange}
+                        placeholder="Select date of birth"
+                        className="w-full"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="555-123-4567" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="nationality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nationality</FormLabel>
+                  <FormControl>
+                    <Input placeholder="American" {...field} value={field.value ?? ''} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          {/* Colonne 2: Attributs et contact */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
             <FormField
               control={form.control}
-              name="hairColor"
+              name="fingerprint"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Hair Color</FormLabel>
+                  <FormLabel>Fingerprint</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Fingerprint" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="bloodType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Blood Type</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Blood Type" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="isDead"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Is Dead</FormLabel>
+                  <FormControl>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value ? "true" : "false"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="true">True</SelectItem>
+                        <SelectItem value="false">False</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="isHandcuffed"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Is Handcuffed</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
+                    defaultValue={field.value ? "true" : "false"}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select hair color" />
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Black">Black</SelectItem>
-                      <SelectItem value="Brown">Brown</SelectItem>
-                      <SelectItem value="Blonde">Blonde</SelectItem>
-                      <SelectItem value="Red">Red</SelectItem>
-                      <SelectItem value="Gray">Gray</SelectItem>
-                      <SelectItem value="White">White</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="true">True</SelectItem>
+                      <SelectItem value="false">False</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -368,269 +364,212 @@ export function CitizenForm({ citizen, serverSlug }: CitizenFormProps) {
             />
           </div>
           
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="123 Main St, City" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="postal"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Postal Code</FormLabel>
-                <FormControl>
-                  <Input placeholder="12345" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="555-123-4567" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="occupation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Occupation</FormLabel>
-                <FormControl>
-                  <Input placeholder="Software Developer" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Colonne 3: Licences et informations additionnelles */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="driversLicense"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Drivers License</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value ?? ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Valid">Valid</SelectItem>
+                        <SelectItem value="Suspended">Suspended</SelectItem>
+                        <SelectItem value="Revoked">Revoked</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="driversLicenseCategories"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>DL Categories</FormLabel>
+                    <FormControl>
+                      <Input placeholder="A, B, C" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="pilotLicense"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pilot License</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value ?? ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Valid">Valid</SelectItem>
+                        <SelectItem value="Suspended">Suspended</SelectItem>
+                        <SelectItem value="Revoked">Revoked</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="pilotLicenseCategories"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>PL Categories</FormLabel>
+                    <FormControl>
+                      <Input placeholder="PPL, CPL" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="waterLicense"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Water License</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value ?? ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Valid">Valid</SelectItem>
+                        <SelectItem value="Suspended">Suspended</SelectItem>
+                        <SelectItem value="Revoked">Revoked</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="waterLicenseCategories"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>WL Categories</FormLabel>
+                    <FormControl>
+                      <Input placeholder="A, B, C" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firearmsLicense"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Firearms License</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value ?? ''}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Valid">Valid</SelectItem>
+                        <SelectItem value="Suspended">Suspended</SelectItem>
+                        <SelectItem value="Revoked">Revoked</SelectItem>
+                        <SelectItem value="None">None</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="firearmsLicenseCategories"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>FL Categories</FormLabel>
+                    <FormControl>
+                      <Input placeholder="A, B, C" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="additionalInfo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Additional Information</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Any additional notes or information about this citizen"
+                      className="min-h-[100px]"
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
-        
-        {/* Colonne 3: Licences et informations additionnelles */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="driversLicense"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Drivers License</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Valid">Valid</SelectItem>
-                      <SelectItem value="Suspended">Suspended</SelectItem>
-                      <SelectItem value="Revoked">Revoked</SelectItem>
-                      <SelectItem value="None">None</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="driversLicenseCategories"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>DL Categories</FormLabel>
-                  <FormControl>
-                    <Input placeholder="A, B, C" {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="pilotLicense"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pilot License</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Valid">Valid</SelectItem>
-                      <SelectItem value="Suspended">Suspended</SelectItem>
-                      <SelectItem value="Revoked">Revoked</SelectItem>
-                      <SelectItem value="None">None</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="pilotLicenseCategories"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PL Categories</FormLabel>
-                  <FormControl>
-                    <Input placeholder="PPL, CPL" {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="waterLicense"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Water License</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Valid">Valid</SelectItem>
-                      <SelectItem value="Suspended">Suspended</SelectItem>
-                      <SelectItem value="Revoked">Revoked</SelectItem>
-                      <SelectItem value="None">None</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="waterLicenseCategories"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>WL Categories</FormLabel>
-                  <FormControl>
-                    <Input placeholder="A, B, C" {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="firearmsLicense"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Firearms License</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value ?? ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Valid">Valid</SelectItem>
-                      <SelectItem value="Suspended">Suspended</SelectItem>
-                      <SelectItem value="Revoked">Revoked</SelectItem>
-                      <SelectItem value="None">None</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="firearmsLicenseCategories"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>FL Categories</FormLabel>
-                  <FormControl>
-                    <Input placeholder="A, B, C" {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="additionalInfo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Additional Information</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Any additional notes or information about this citizen"
-                    className="min-h-[100px]"
-                    {...field}
-                    value={field.value ?? ''}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="flex justify-end space-x-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push(`/servers/${serverSlug}/citizens`)}
+          >
+            Cancel
+          </Button>
+          <LoadingButton type="submit" loading={isPending}>
+            {isEditing ? "Update Citizen" : "Create Citizen"}
+          </LoadingButton>
         </div>
-      </div>
-            
-      <div className="flex justify-end space-x-4 mt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push(`/servers/${serverSlug}/citizens`)}
-        >
-          Cancel
-        </Button>
-        <LoadingButton type="submit" loading={isPending}>
-          {isEditing ? "Update Citizen" : "Create Citizen"}
-        </LoadingButton>
       </div>
     </Form>
   );

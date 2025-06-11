@@ -26,7 +26,7 @@ export default async function DeleteVehiclePage({
     notFound();
   }
 
-  const vehicleInfo = `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})`;
+  const vehicleInfo = `${vehicle.vehicle} (${vehicle.plate})`;
 
   return (
     <CheckPermission

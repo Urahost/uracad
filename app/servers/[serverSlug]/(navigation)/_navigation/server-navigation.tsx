@@ -51,7 +51,10 @@ export function ServerNavigation({
 }: ServerNavigationProps) {
   const mappedServers = userServers.map(server => ({
     ...server,
-    colorsTheme: server.metadata ? JSON.parse(server.metadata).colorsTheme ?? null : null
+    colorsTheme: server.metadata ? JSON.parse(server.metadata).colorsTheme ?? null : null,
+    apiUrl: null,
+    syncInterval: null,
+    lastSyncAt: null
   }));
 
   return (

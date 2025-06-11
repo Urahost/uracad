@@ -25,7 +25,10 @@ export default async function AuthNavigationWrapper(props: PropsWithChildren) {
     metadata: String(server.metadata) as string | null,
     slug: server.slug,
     createdAt: server.createdAt,
-    colorsTheme: server.metadata ? JSON.parse(String(server.metadata)).colorsTheme ?? null : null
+    colorsTheme: server.metadata ? JSON.parse(String(server.metadata)).colorsTheme ?? null : null,
+    apiUrl: null,
+    syncInterval: null,
+    lastSyncAt: null
   }));
 
   return (
