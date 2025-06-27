@@ -1,74 +1,58 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 // Remove import of server action and implement locally
 // import { hasPermission } from "./permissions.action";
 
-type PermissionsContextType = {
-  permissions: string[];
-  roles: string[];
-  hasPermission: (permission: string | string[], mode?: "AND" | "OR") => boolean;
+// Type du contexte
+export type PermissionsContextType = {
+  permissions: Record<string, boolean>;
+  isLoading: boolean;
 };
 
 const PermissionsContext = createContext<PermissionsContextType>({
-  permissions: [],
-  roles: [],
-  hasPermission: () => false,
+  permissions: {},
+  isLoading: true,
 });
 
-export const usePermissions = () => useContext(PermissionsContext);
+export function PermissionsProvider({ requiredPermissions, children }: { requiredPermissions: string[]; children: React.ReactNode }) {
+  const [permissions, setPermissions] = useState<Record<string, boolean>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const params = useParams<{ serverSlug: string }>();
 
-// Client-side implementation of hasPermission
-function checkPermission(
-  permission: string | string[],
-  permissions: string[],
-  roles: string[],
-  mode: "AND" | "OR" = "OR"
-): boolean {
-  // Si l'utilisateur est owner ou admin, il peut tout faire
-  if (roles.includes("OWNER") || roles.includes("ADMIN")) {
-    return true;
-  }
-  
-  // Vérifier si la liste contient ADMINISTRATOR (donne toutes les permissions)
-  if (permissions.includes("ADMINISTRATOR")) {
-    return true;
-  }
-  
-  // Cas d'une seule permission
-  if (typeof permission === "string") {
-    return permissions.includes(permission);
-  }
-  
-  // Cas d'un tableau de permissions
-  if (mode === "AND") {
-    // Toutes les permissions sont requises
-    return permission.every(p => permissions.includes(p));
-  } else {
-    // Au moins une permission est requise
-    return permission.some(p => permissions.includes(p));
-  }
-}
-
-export function PermissionsProvider({
-  children,
-  permissions,
-  roles = [],
-}: {
-  children: React.ReactNode;
-  permissions: string[];
-  roles?: string[];
-}) {
-  const contextValue = {
-    permissions,
-    roles,
-    hasPermission: (permission: string | string[], mode: "AND" | "OR" = "OR") => 
-      checkPermission(permission, permissions, roles, mode),
-  };
+  useEffect(() => {
+    if (!Array.isArray(requiredPermissions) || requiredPermissions.length === 0) {
+      setPermissions({});
+      setIsLoading(false);
+      return;
+    }
+    async function fetchPermissions() {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/servers/${params.serverSlug}/check-permission`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ permissions: requiredPermissions, mode: "BULK" }),
+        });
+        const data = await res.json();
+        setPermissions(data.results ?? {});
+      } catch (e) {
+        setPermissions({});
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    void fetchPermissions();
+  }, [requiredPermissions, params.serverSlug]);
 
   return (
-    <PermissionsContext.Provider value={contextValue}>
+    <PermissionsContext.Provider value={{ permissions, isLoading }}>
       {children}
     </PermissionsContext.Provider>
   );
+}
+
+export function usePermissions() {
+  return useContext(PermissionsContext);
 } 

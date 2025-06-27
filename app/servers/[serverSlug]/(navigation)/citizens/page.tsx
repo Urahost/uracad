@@ -13,7 +13,7 @@ import { getRequiredCurrentServerCache } from "@/lib/react/cache";
 import { createSearchParamsCache, parseAsInteger } from "nuqs/server";
 import { combineWithParentMetadata } from "@/lib/metadata";
 import { CreateCitizenModal } from "./_components/create-citizen-modal";
-import CheckPermission from "../permissions/check-permissions";
+import { PermissionsProvider } from "../permissions/permissions-provider";
 
 // Ajouter des métadonnées à la page
 export const generateMetadata = combineWithParentMetadata({
@@ -35,26 +35,29 @@ export default async function CitizensPage({ searchParams }: PageParams) {
   // Get citizens with pagination
   const { citizens, pagination } = await getCitizensList(page, limit);
 
+  // Log debug
+  console.log("CITIZENS DEBUG", citizens, "SERVER", server);
+
   return (
-    <Layout size="lg">
-      <LayoutHeader>
-        <LayoutTitle>Citizens</LayoutTitle>
-        <LayoutDescription>
-          Manage citizens database for your CAD/MDT system
-        </LayoutDescription>
-      </LayoutHeader>
-      <LayoutActions>
-        <CheckPermission permissions={["CREATE_CITIZEN"]}>
-        <CreateCitizenModal serverSlug={server.slug} />
-        </CheckPermission>
-      </LayoutActions>
-      <LayoutContent>
-        <CitizensTable 
-          citizens={citizens} 
-          serverSlug={server.slug} 
-          pagination={pagination}
-        />
-      </LayoutContent>
-    </Layout>
+    <PermissionsProvider requiredPermissions={["CREATE_CITIZEN", "DELETE_CITIZEN", "EDIT_CITIZEN", "VIEW_CITIZEN"]}>
+      <Layout size="lg">
+        <LayoutHeader>
+          <LayoutTitle>Citizens</LayoutTitle>
+          <LayoutDescription>
+            Manage citizens database for your CAD/MDT system
+          </LayoutDescription>
+        </LayoutHeader>
+        <LayoutActions>
+            <CreateCitizenModal serverSlug={server.slug} />
+        </LayoutActions>
+        <LayoutContent>
+          <CitizensTable 
+            citizens={citizens} 
+            serverSlug={server.slug} 
+            pagination={pagination}
+          />
+        </LayoutContent>
+      </Layout>
+    </PermissionsProvider>
   );
 }

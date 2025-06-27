@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { CopyLinkButton } from "./copy-link-button";
 import { FormSettingsModal } from "./form-settings-modal";
 import { PencilIcon, Settings2Icon, Trash2Icon } from "lucide-react";
@@ -82,7 +82,11 @@ export function FormsTableClient({ forms: initialForms, server }: FormsTableClie
                   <td className="p-4 font-medium max-w-xs truncate" title={form.title}>{form.title}</td>
                   <td className="p-4 text-muted-foreground max-w-xs truncate" title={form.description ?? undefined}>{form.description}</td>
                   <td className="p-4 text-center">{form.questions.length}</td>
-                  <td className="p-4 text-center">{form._count.responses}</td>
+                  <td className="p-4 text-center">
+                    <Link className={buttonVariants({ variant: "link" })} href={`/servers/${server.slug}/settings/forms/${form.id}/responses`}>
+                      {form._count.responses}
+                    </Link>
+                  </td>
                   <td className="p-4 text-center">
                     <div className="flex flex-wrap gap-1 justify-center">
                       {mentions.roles.length > 0 && (

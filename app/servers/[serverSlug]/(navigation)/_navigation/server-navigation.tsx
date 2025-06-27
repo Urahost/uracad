@@ -58,10 +58,7 @@ export function ServerNavigation({
   }));
 
   return (
-    <PermissionsProvider 
-      permissions={userPermissions}
-      roles={server.memberRoles}
-    >
+    <PermissionsProvider requiredPermissions={userPermissions}>
       <SidebarProvider>
         <ServerSidebar
           slug={server.slug}

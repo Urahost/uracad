@@ -12,16 +12,16 @@ type PermissionCheckProps = {
 }
 
 export function PermissionCheck({ children, permission, fallback }: PermissionCheckProps) {
-  const { hasPermission } = usePermissions();
+  const { permissions } = usePermissions();
   const router = useRouter();
   
   useEffect(() => {
-    if (!hasPermission(permission)) {
+    if (!permissions[permission]) {
       router.push(fallback);
     }
-  }, [permission, fallback, hasPermission, router]);
+  }, [permission, fallback, permissions, router]);
 
-  if (!hasPermission(permission)) {
+  if (!permissions[permission]) {
     return null;
   }
 
