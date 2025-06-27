@@ -1,9 +1,7 @@
 "use client";
 
-import type { ReactNode} from "react";
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { logger } from "@/lib/logger";
+import type { ReactNode } from "react";
+import { usePermissions } from "./permissions-provider";
 
 // Types pour les props
 type CheckPermissionProps = {
@@ -15,21 +13,7 @@ type CheckPermissionProps = {
 };
 
 /**
- * Composant pour vérifier les permissions côté client
- * 
- * @example
- * <CheckPermission permissions="EDIT_CITIZENS">
- *   <Button>Modifier</Button>
- * </CheckPermission>
- * 
- * @example
- * <CheckPermission 
- *   permissions={["CREATE_CITIZENS", "EDIT_CITIZENS"]} 
- *   mode="OR"
- *   fallback={<p>Vous n'avez pas les permissions nécessaires</p>}
- * >
- *   <Button>Action</Button>
- * </CheckPermission>
+ * Composant pour vérifier les permissions côté client (via contexte)
  */
 export default function CheckPermission({ 
   permissions, 
@@ -38,59 +22,29 @@ export default function CheckPermission({
   children,
   redirect
 }: CheckPermissionProps) {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const params = useParams<{ serverSlug: string }>();
-  const router = useRouter();
-
-  useEffect(() => {
-    const checkPermission = async () => {
-      try {
-        // Appeler l'API pour vérifier les permissions
-        const response = await fetch(`/api/servers/${params.serverSlug}/check-permission`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            permissions,
-            mode,
-          }),
-        });
-
-        if (!response.ok) {
-          setHasPermission(false);
-          return;
-        }
-
-        const { granted } = await response.json();
-        
-        if (redirect && !granted) {
-          router.push(redirect);
-          return;
-        }
-        
-        setHasPermission(granted);
-      } catch (error) {
-        logger.error("Error checking permissions:", { error });
-        setHasPermission(false);
-      }
-    };
-
-    if (params.serverSlug) {
-      void checkPermission();
-    }
-  }, [params.serverSlug, permissions, mode, redirect, router]);
+  const { permissions: perms, isLoading } = usePermissions();
 
   // Pendant le chargement, on ne montre rien
-  if (hasPermission === null) {
+  if (isLoading) {
     return null;
   }
 
-  // Si l'utilisateur a la permission, on affiche les enfants
-  if (hasPermission) {
-    return <>{children}</>;
+  // Normalise permissions en tableau
+  const permsToCheck = Array.isArray(permissions) ? permissions : [permissions];
+
+  // Vérifie les permissions selon le mode
+  let granted = false;
+  if (mode === "AND") {
+    granted = permsToCheck.every((perm) => perms[perm]);
+  } else {
+    granted = permsToCheck.some((perm) => perms[perm]);
   }
 
-  // Sinon, on affiche le fallback
+  // Redirection si demandé (à gérer côté page si besoin)
+  // if (redirect && !granted) { ... }
+
+  if (granted) {
+    return <>{children}</>;
+  }
   return <>{fallback}</>;
 } 

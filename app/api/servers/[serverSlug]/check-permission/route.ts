@@ -18,11 +18,14 @@ export async function POST(
 
     // Récupérer les données de la requête
     const { permissions, mode = "OR" } = await req.json();
+    logger.info("[PERM API] Body reçu", { permissions, mode });
+    logger.info("[PERM API] DEBUG permissions type", { type: typeof permissions, isArray: Array.isArray(permissions), value: permissions });
 
-    // Vérifier que permissions est bien défini
-    if (!permissions) {
+    // Vérifier que permissions est bien défini et un tableau
+    if (!permissions || !Array.isArray(permissions)) {
+      logger.error("[PERM API] Permissions not provided or not array", { permissions });
       return NextResponse.json(
-        { error: "Permissions not provided" },
+        { error: "Permissions not provided or not array" },
         { status: 400 }
       );
     }
@@ -45,6 +48,12 @@ export async function POST(
 
     // Les rôles owner et admin ont toujours toutes les permissions
     if (member?.role === "owner" || member?.role === "admin") {
+      logger.info("[PERM API] Owner/Admin detected", { mode, permissions });
+      if (mode === "BULK" && Array.isArray(permissions)) {
+        const results = Object.fromEntries(permissions.map(perm => [perm, true]));
+        logger.info("[PERM API] Owner/Admin BULK results", { results });
+        return NextResponse.json({ results });
+      }
       return NextResponse.json({ granted: true });
     }
 
@@ -64,7 +73,22 @@ export async function POST(
 
       // Vérifier si ADMINISTRATOR est présent (donne toutes les permissions)
       if (userPermissions.includes("ADMINISTRATOR")) {
+        logger.info("[PERM API] ADMINISTRATOR detected", { mode, permissions });
+        if (mode === "BULK" && Array.isArray(permissions)) {
+          const results = Object.fromEntries(permissions.map(perm => [perm, true]));
+          logger.info("[PERM API] ADMINISTRATOR BULK results", { results });
+          return NextResponse.json({ results });
+        }
         return NextResponse.json({ granted: true });
+      }
+
+      // Ajout BULK mode
+      if (mode === "BULK" && Array.isArray(permissions)) {
+        const results = Object.fromEntries(
+          permissions.map(perm => [perm, userPermissions.includes(perm)])
+        );
+        logger.info("[PERM API] User BULK results", { results });
+        return NextResponse.json({ results });
       }
 
       // Vérifier les permissions demandées

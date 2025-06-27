@@ -216,11 +216,108 @@ export type ApiVehicle = {
   impoundtime: number | null;
 }
 
+export type SyncSystem = 'esx' | 'qbcore';
+
+export type ESXAccount = {
+  money: number;
+  bank: number;
+  black_money: number;
+}
+
+export type ESXStatus = {
+  val: number;
+  percent: number;
+  name: string;
+}
+
+export type ESXCitizen = {
+  identifier: string;
+  accounts: string; // JSON string of ESXAccount
+  group: string;
+  inventory: string; // JSON string of ESXInventoryItem[]
+  job: string;
+  job_grade: number;
+  loadout: string;
+  metadata: string;
+  position: string;
+  firstname: string;
+  lastname: string;
+  dateofbirth: string;
+  sex: string;
+  height: number;
+  skin: string;
+  status: string; // JSON string of ESXStatus[]
+  is_dead: boolean;
+  disabled: boolean;
+  last_property: string | null;
+  phone_number: string | null;
+}
+
+export type QBCoreCitizen = {
+  citizenid: string;
+  charinfo: {
+    firstname: string;
+    lastname: string;
+    birthdate: string;
+    gender: string;
+    nationality: string;
+    phone: string;
+  };
+  money: {
+    cash: number;
+    bank: number;
+    crypto: number;
+  };
+  job: {
+    name: string;
+    label: string;
+    payment: number;
+    onduty: boolean;
+    isboss: boolean;
+    grade: {
+      name: string;
+      level: number;
+    };
+  };
+  gang: {
+    name: string;
+    label: string;
+    grade: {
+      name: string;
+      level: number;
+    };
+  };
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  metadata: {
+    health: number;
+    armor: number;
+    hunger: number;
+    thirst: number;
+    stress: number;
+    phone: string;
+    inventory: InventoryItem[];
+  };
+  inventory: InventoryItem[];
+  isDead: boolean;
+  isHandcuffed: boolean;
+  inJail: number;
+}
+
 export type SyncConfig = {
-  apiUrl: string;
+  system: SyncSystem;
   organizationId: string;
-  syncInterval?: number; // en millisecondes
+  syncInterval?: number;
   lastSyncAt?: Date;
+  esx?: {
+    baseUrl: string;
+  };
+  qbcore?: {
+    baseUrl: string;
+  };
 }
 
 export type SyncStatus = {
@@ -250,16 +347,12 @@ export type PhoneApp = {
 export type InventoryItem = {
   name: string;
   count: number;
-  slot: number;
-  metadata?: {
-    [key: string]: string | number | string[] | undefined;
-    registered?: string;
-    durability?: number;
-    ammo?: number;
-    components?: string[];
-    serial?: string;
-  };
-};
+  label: string;
+  weight: number;
+  usable: boolean;
+  rare: boolean;
+  canRemove: boolean;
+}
 
 export type VehicleMod = {
   id: number;

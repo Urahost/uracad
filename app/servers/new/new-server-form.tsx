@@ -75,7 +75,7 @@ export const NewServerForm = () => {
 
       toast.success("Server created successfully");
       router.refresh();
-      router.push(`/servers/${result.data.slug}`);
+      router.push(`/account`);
     },
   });
 

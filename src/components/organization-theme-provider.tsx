@@ -48,12 +48,6 @@ export function OrganizationThemeProvider({ metadata, children }: OrganizationTh
       return;
     }
 
-    // Si le thème n'a pas changé et a déjà été appliqué, ne rien faire
-    if (themeInfo.themeName === themeState.lastTheme && themeState.applied) {
-      logger.info("[OrganizationThemeProvider] Skipping theme application - theme unchanged");
-      return;
-    }
-
     try {
       // Appliquer le thème avec la version light/dark appropriée
       const isDark = resolvedTheme === 'dark';
